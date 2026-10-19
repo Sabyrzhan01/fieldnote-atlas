@@ -18,4 +18,4 @@ An independent researcher, designer, journalist, urbanist, or student collects f
 - Visual direction: warm editorial research journal, muted cartography, terracotta pins, serif titles, mono metadata. Inspiration pointers are in `design-system.md`.
 
 ## Build workflow
-The MVP follows five inspectable checkpoints: frontend with mock service; OpenAPI verified against the service boundary; in-memory backend; SQLAlchemy/SQLite repository; frontend connected to persistent backend. The GitHub issue backlog is canonical in `Sabyrzhan01/fieldnote-atlas`; all 14 MVP issues and the real browser-found bug issue have QA PASS comments and are closed.
+The MVP follows five inspectable checkpoints: frontend with mock service; OpenAPI verified against the service boundary; in-memory backend; SQLAlchemy/SQLite repository; frontend connected to persistent backend. The GitHub issue backlog is canonical in `Sabyrzhan01/fieldnote-atlas`; all 14 MVP issues and both real browser-found bug issues have QA PASS comments and are closed.

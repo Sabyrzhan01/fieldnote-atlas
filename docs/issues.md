@@ -1,6 +1,6 @@
 # GitHub issue backlog
 
-Labels `mvp`, `post-mvp`, and `user-test-bug` exist in [the project repository](https://github.com/Sabyrzhan01/fieldnote-atlas). The 14 groomed issue bodies are in `issues/mvp/`; they have been adapted into the GitHub backlog. All 14 MVP issues and the one browser-discovered `user-test-bug` issue are QA-commented and closed. GitHub Issues are canonical for current status. The import script is for a fresh fork only; do not run it against the existing repository, where it would create duplicates.
+Labels `mvp`, `post-mvp`, and `user-test-bug` exist in [the project repository](https://github.com/Sabyrzhan01/fieldnote-atlas). The 14 groomed issue bodies are in `issues/mvp/`; they have been adapted into the GitHub backlog. All 14 MVP issues and both browser-discovered `user-test-bug` issues are QA-commented and closed. GitHub Issues are canonical for current status. The import script is for a fresh fork only; do not run it against the existing repository, where it would create duplicates.
 
 ## MVP
 1. **Bootstrap app shell and passing checks** — Goal: runnable frontend/backend project skeleton. AC: production build succeeds; backend health endpoint succeeds; root instructions work.
