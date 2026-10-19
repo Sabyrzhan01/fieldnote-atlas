@@ -8,10 +8,12 @@ The map is a hand-composed Almaty study surface with selectable evidence pins, a
 
 ## Run locally
 
-Requirement: Python 3.11+ and the packages in `backend/requirements.txt`.
+Requirement: Python 3.11+ and the packages in `backend/requirements.txt`. Use a virtual environment so the app and tests use the same dependencies.
 
 ```sh
-python3 -m pip install -r backend/requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r backend/requirements.txt
 python3 server.py
 ```
 
