@@ -1,0 +1,1 @@
+{"name":"fieldnote-atlas","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"python3 server.py","test":"python3 -m unittest discover -s backend/tests -v","build":"python3 -m compileall -q backend server.py"}}

@@ -1,0 +1,101 @@
+openapi: 3.0.3
+info:
+  title: Fieldnote Atlas API
+  version: 1.0.0
+  description: Local API for collections and qualitative field observations.
+servers:
+  - url: http://127.0.0.1:8091
+paths:
+  /api/health:
+    get:
+      summary: Check API availability
+      responses:
+        '200': {description: API is healthy}
+  /api/atlas:
+    get:
+      summary: Return collections and observations for the active workspace
+      responses:
+        '200':
+          description: Atlas snapshot
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AtlasData'}
+  /api/observations:
+    post:
+      summary: Create an observation in the selected collection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ObservationInput'}
+      responses:
+        '201':
+          description: Updated atlas snapshot
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AtlasData'}
+        '422': {description: Invalid request or unknown collection_id}
+  /api/observations/{observation_id}/star:
+    post:
+      summary: Toggle the starred state
+      parameters:
+        - {in: path, name: observation_id, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Updated atlas snapshot}
+        '404': {description: Observation not found}
+  /api/observations/{observation_id}:
+    delete:
+      summary: Delete an observation
+      parameters:
+        - {in: path, name: observation_id, required: true, schema: {type: string}}
+      responses:
+        '200': {description: Updated atlas snapshot}
+        '404': {description: Observation not found}
+components:
+  schemas:
+    Collection:
+      type: object
+      required: [id, title, subtitle, color, observationCount]
+      properties:
+        id: {type: string}
+        title: {type: string}
+        subtitle: {type: string}
+        color: {type: string}
+        observationCount: {type: integer}
+    Observation:
+      type: object
+      required: [id, collection_id, title, body, kind, place, region, date, color, tags, source, starred]
+      properties:
+        id: {type: string}
+        collection_id: {type: string}
+        title: {type: string}
+        body: {type: string}
+        kind: {type: string, enum: [Field note, Interview, Artifact, Signal]}
+        place: {type: string}
+        region: {type: string}
+        date: {type: string}
+        color: {type: string}
+        tags: {type: array, items: {type: string}}
+        source: {type: string}
+        starred: {type: boolean}
+    ObservationInput:
+      type: object
+      required: [title, body, kind, place, region, date, color, tags, source, starred]
+      properties:
+        collection_id: {type: string, default: c1, description: Collection that owns the observation}
+        title: {type: string, minLength: 1, maxLength: 120}
+        body: {type: string, minLength: 1, maxLength: 1000}
+        kind: {type: string, enum: [Field note, Interview, Artifact, Signal]}
+        place: {type: string, maxLength: 160}
+        region: {type: string}
+        date: {type: string}
+        color: {type: string}
+        tags: {type: array, items: {type: string, maxLength: 40}}
+        source: {type: string}
+        starred: {type: boolean}
+    AtlasData:
+      type: object
+      required: [collections, observations]
+      properties:
+        collections: {type: array, items: {$ref: '#/components/schemas/Collection'}}
+        observations: {type: array, items: {$ref: '#/components/schemas/Observation'}}
