@@ -19,7 +19,7 @@
 - Search for `noticeboard` reduced results to one matching observation. PASS.
 - Starred filter reduced results to the two seeded starred notes. PASS.
 - Mock-service create flow added a note with place/tags and it remained after reload. PASS.
-- Default route (no query parameter) create flow submitted through FastAPI + SQLAlchemy; note appeared in UI and SQLite count increased. The page was reloaded and collection count and note reappeared. PASS.
+- Default route create flow submitted through FastAPI + SQLAlchemy; note appeared in UI and SQLite count increased. The page was reloaded and collection count and note reappeared. PASS.
 - SQL API operations were exercised independently for persistence and delete behavior. PASS.
 
 ## Bug found and addressed
@@ -32,4 +32,13 @@ The first browser load was blank due to an unbalanced parenthesis in `app.js` ev
 - Unknown collection IDs returned 422 without creating a row in the FastAPI + SQLAlchemy API. PASS.
 - `python3 -m compileall -q backend server.py`, Node syntax checks, `node --test frontend/tests/services.test.js` (4/4), and `.venv/bin/python -m unittest discover -s backend/tests -v` (7/7) — PASS.
 - Five post-MVP follow-up specifications are in `issues/post-mvp/`. They are explicitly deferred scope, not claims about implemented behavior.
-- QA evidence was produced in the same Codex task as implementation; it is not independent-agent QA. The role guide defines separate-session QA for the next review cycle, but this run cannot be represented as independent.
+- QA evidence was produced in the same Codex task as implementation; it is not independent-agent QA.
+
+## Fresh-checkout verification (2026-10-20)
+- Cloned public `main` into a clean checkout. The documented `backend/requirements.txt` was missing; GitHub issue #22 records the defect and the PM-groomed scope.
+- Restored `backend/requirements.txt` and documented virtual-environment setup. Installed dependencies into a Python 3.14 venv.
+- `pnpm test` passed: 7 Python repository tests and 4 JavaScript service tests. `pnpm build` passed: Python compile and JavaScript syntax checks.
+- FastAPI TestClient passed health, list, create in selected collection, star, delete, repeated-delete 404, and unknown collection 422.
+- Isolated SQLite-backed browser walkthrough passed initial render, switching to an empty collection, creating a note in that collection, persistence after reload, starring and star persistence, and search narrowing to one result. Temporary test data and database were removed.
+- Server log included a missing `/favicon.ico` response (404); this does not affect core app behavior and is not an MVP criterion.
+- Verification was performed by the same development session, not an independent reviewer. The GitHub issue #22 contains this QA PASS and was closed after the fix was committed.
