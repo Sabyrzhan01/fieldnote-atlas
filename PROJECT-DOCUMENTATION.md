@@ -1,7 +1,11 @@
-# Fieldnote Atlas — project documentation bundle
+# Fieldnote Atlas — Project Documentation
+
+This file combines every Markdown file from the source bundle so the full documentation is readable in GitHub. The archive contains the original directory structure.
 
 
-# Source file: `.github/ISSUE_TEMPLATE/bug_report.md`
+---
+
+## `.github/ISSUE_TEMPLATE/bug_report.md`
 
 ---
 name: User test bug
@@ -24,8 +28,9 @@ labels: user-test-bug
 
 ## Regression tests to add
 
+---
 
-# Source file: `AGENTS.md`
+## `AGENTS.md`
 
 # Fieldnote Atlas
 
@@ -54,8 +59,9 @@ Fieldnote Atlas is a visual field-research workspace for collecting observations
 - Preserve the build sequence in `docs/process.md`: mock frontend, OpenAPI, in-memory backend, SQLite via SQLAlchemy, then frontend/backend integration.
 - Do not add secrets or real personal interview data. Seed content is fictional.
 
+---
 
-# Source file: `README.md`
+## `README.md`
 
 # Fieldnote Atlas
 
@@ -73,7 +79,7 @@ python3 server.py
 
 Open `http://127.0.0.1:8091/` for the localStorage mock-service edition. Open `http://127.0.0.1:8091/?api=1` for the frontend connected to the SQLite API. The API can be checked at `/api/health` and `/api/atlas`.
 
-The current runnable API uses Python's SQLite DB-API so it can run offline with the system Python. The earlier FastAPI/SQLAlchemy implementation remains in `backend/app/` as the planned ORM-backed deployment architecture; it requires installing `backend/requirements.txt` when the package registry is available.
+The default runnable API uses Python's SQLite DB-API so it can run offline with the system Python. `backend/app/` also contains a FastAPI API with in-memory and SQLAlchemy repository implementations. Install `backend/requirements.txt` to run that ORM-backed path; it has been exercised with FastAPI's test client and a SQLite database.
 
 Optional frontend convenience commands, if `npm` is available:
 
@@ -92,15 +98,14 @@ npm run build
 - `docs/` — product spec, brainstorm, design brief, test/process guidance, backlog, role briefs
 
 ## Workflow
-This project follows the staged path in `docs/process.md`: mock-backed frontend → OpenAPI contract → in-memory backend → SQLite through SQLAlchemy → integrated frontend/backend. GitHub Issues become the canonical backlog when the project is connected to a GitHub repo. Create the `mvp`, `post-mvp`, and `user-test-bug` labels and import `docs/issues.md`.
-
-Groomed MVP issue bodies are in `issues/mvp/`. Once signed in and connected to the intended GitHub repo, run `python3 scripts/import_github_issues.py` to create 14 `mvp` issues and the observed `user-test-bug` issue.
+This project follows the staged path in `docs/process.md`: mock-backed frontend → OpenAPI contract → in-memory backend → SQLite through SQLAlchemy → integrated frontend/backend. The GitHub repository is [Sabyrzhan01/fieldnote-atlas](https://github.com/Sabyrzhan01/fieldnote-atlas). It has the `mvp`, `post-mvp`, and `user-test-bug` labels. Groomed MVP issue bodies are in `issues/mvp/`; the GitHub backlog has 14 MVP issues and one user-test-bug issue, each with QA comments and closed after passing checks.
 
 ## Status
-Runnable dependency-free edition is verified in Chrome. API checks passed for seed, create, invalid input, star, SQLite reconnect persistence, delete, and not-found. The browser walkthrough verified first render, search, starred filtering, local mock creation, and SQLite API-backed creation. Python/JS syntax checks and four repository unit tests pass. GitHub Issues have not been created: no Git remote or authenticated GitHub session is available in the current browser. Import `docs/issues.md` after connecting the project repo, then have QA complete and close the backlog.
+Runnable dependency-free edition and the optional FastAPI/SQLAlchemy edition are verified. API checks passed for seed, create, invalid input, star, SQLite persistence across fresh processes, delete, and not-found. The Chrome walkthrough verified first render, search, starred filtering, local mock creation, and SQLite API-backed creation. JavaScript/Python syntax checks, OpenAPI parsing, four repository tests, in-memory API checks, and SQLAlchemy persistence checks pass. The first-load browser bug was recorded as a `user-test-bug` GitHub issue, fixed, regression-checked, and closed by QA.
 
+---
 
-# Source file: `docs/brainstorming.md`
+## `docs/brainstorming.md`
 
 # Brainstorming record
 
@@ -124,8 +129,9 @@ An independent researcher, designer, journalist, urbanist, or student collects f
 ## Build workflow
 The MVP should follow five inspectable checkpoints: frontend with mock service; OpenAPI generated from/verified against the service boundary; in-memory backend; SQLAlchemy/SQLite repository; frontend connected to persistent backend. GitHub issue backlog is canonical once a repository exists. The local environment currently has no repository remote or GitHub CLI, so external issue creation/closure is not represented as completed.
 
+---
 
-# Source file: `docs/design-system.md`
+## `docs/design-system.md`
 
 # Design direction
 
@@ -147,8 +153,9 @@ These are visual references only; do not copy brand assets or exact layouts.
 - Give buttons hover/focus states, meaningful accessible labels, visible error feedback, and preserve content when a form validation error occurs.
 - Responsive desktop target; make layout usable at 900px. Mobile layout remains a follow-up.
 
+---
 
-# Source file: `docs/issues.md`
+## `docs/issues.md`
 
 # GitHub issue backlog
 
@@ -181,8 +188,9 @@ Create labels: `mvp` (orange), `post-mvp` (gray), and `user-test-bug` (red). The
 ## User-test bug procedure
 Create a new `user-test-bug` issue only after a real manual test finds a defect. Include **Goal** and **Description**, steps, expected/actual behavior, and browser. PM grooms; QA adds regression cases; QA closes only after retest PASS.
 
+---
 
-# Source file: `docs/process.md`
+## `docs/process.md`
 
 # Development process
 
@@ -207,8 +215,9 @@ When a bug is found during hands-on app use, create a GitHub issue labeled `user
 ## Git discipline
 Commit at meaningful milestones. Keep all Markdown project artifacts in the repository. Do not mark an issue done until the corresponding code/docs are committed and QA has checked it.
 
+---
 
-# Source file: `docs/qa-results.md`
+## `docs/qa-results.md`
 
 # QA evidence
 
@@ -221,6 +230,8 @@ Commit at meaningful milestones. Keep all Markdown project artifacts in the repo
 - Ruby standard-library YAML parser loaded `openapi.yaml` and verified five API paths — PASS.
 - `python3 -m compileall -q backend server.py` — PASS.
 - `python3 -m unittest discover -s backend/tests -v` — PASS, 4 tests.
+- `.venv/bin/python` FastAPI TestClient workflow — PASS: in-memory seed, health/atlas, create validation (422), create/star/delete, and missing-ID behavior.
+- SQLAlchemy SQLite API workflow across three fresh Python processes — PASS: idempotent seed, create, star, and delete persisted after process restart.
 - HTTP/API smoke script — PASS: health/atlas seed, create valid observation (201), reject blank required fields (422), star toggle, close/reopen SQLite DB and verify created row remains, delete row, reject repeated delete (404).
 - Browser console — page loaded and rendered with no JS syntax errors after the reported fix.
 
@@ -233,15 +244,16 @@ Commit at meaningful milestones. Keep all Markdown project artifacts in the repo
 - SQL API operations were exercised independently for persistence and delete behavior. PASS.
 
 ## Bug found and addressed
-The first browser load was blank due to an unbalanced parenthesis in `app.js` event binding. Fixed and added `docs/user-test-bugs.md` as the required `user-test-bug` issue draft with Goal, Description, reproduction steps, and regression checks. GitHub issue creation/QA closure could not be completed because no repo/remote or signed-in GitHub account was available.
+The first browser load was blank due to an unbalanced parenthesis in `app.js` event binding. Fixed and added `docs/user-test-bugs.md` with Goal, Description, reproduction steps, and regression checks. GitHub issue #2 was created with the `user-test-bug` label, regression-checked in Chrome, and closed by QA with a PASS comment.
 
 ## Remaining checks
 - No automated visual-regression test or formal Playwright suite was added; browser checks above were manual.
-- FastAPI + SQLAlchemy code path is included but not run because external Python dependencies could not be downloaded. The runnable default API uses standard-library SQLite DB-API. The integrated working route is `/` with `?api=1`.
-- GitHub labels, issues, QA comments and issue closure remain to be done after repository/account access is available.
+- The integrated browser path uses the standard-library SQLite API at `/` with `?api=1`. FastAPI/SQLAlchemy is a separately tested backend API path.
+- All 14 `mvp` issues and the `user-test-bug` issue in the GitHub repository were QA-commented and closed after passing checks. No `post-mvp` issue was in scope for the first release.
 
+---
 
-# Source file: `docs/spec.md`
+## `docs/spec.md`
 
 # Product specification — Fieldnote Atlas
 
@@ -279,8 +291,9 @@ An editorial research atlas: warm paper surfaces, muted botanical map tones, ter
 - Creating and starring observations survives app reload after SQLite integration.
 - Frontend/API contract matches `openapi.yaml`; backend tests and a human browser walkthrough pass.
 
+---
 
-# Source file: `docs/task-template.md`
+## `docs/task-template.md`
 
 ## Goal
 One or two sentences describing what must be true when this is done.
@@ -294,29 +307,33 @@ One or two sentences describing what must be true when this is done.
 ## Constraints
 - Relevant files, architecture, libraries, and linked project docs
 
+---
 
-# Source file: `docs/team/pm.md`
+## `docs/team/pm.md`
 
 # Product manager
 
 Groom one issue before implementation. Read its original text, `docs/spec.md`, `docs/process.md`, and `docs/task-template.md`. Rewrite the issue with Goal, checkable Acceptance criteria, Out of scope, and Constraints. Include awkward cases, relevant docs, and a realistic verification expectation. Move excluded work to a linked follow-up issue instead of silently dropping it. Do not write code. Definition of done: a new engineer can implement the issue without clarification and QA can verify each criterion from the running result.
 
+---
 
-# Source file: `docs/team/qa-engineer.md`
+## `docs/team/qa-engineer.md`
 
 # QA engineer
 
 Independently verify finished work against the issue's acceptance criteria and `docs/testing-guidelines.md`. Inspect and run the app; do not trust implementation claims. Add test cases for missed acceptance edges and, for user-test bugs, update the regression suite. Do not fix implementation code. Post an issue comment headed `## QA: PASS` or `## QA: FAIL`, with a verdict per criterion, exact test command and result, and manual walkthrough evidence. On FAIL, leave the issue open. On PASS, close the issue and explain closure in the comment. Do not claim browser or remote checks you did not perform.
 
+---
 
-# Source file: `docs/team/software-engineer.md`
+## `docs/team/software-engineer.md`
 
 # Software engineer
 
 Implement one groomed issue at a time. Read all linked docs and acceptance criteria first. Follow `docs/process.md`'s staged architecture, keep frontend calls in the service layer, and use SQLAlchemy for persistence so storage can change without route/UI changes. Add or update focused tests. Run relevant checks and report exact commands/results. Commit the work, but do not close the issue. If requirements conflict or cannot be met, explain that on the issue before changing scope.
 
+---
 
-# Source file: `docs/testing-guidelines.md`
+## `docs/testing-guidelines.md`
 
 # Testing guidelines
 
@@ -339,8 +356,9 @@ Implement one groomed issue at a time. Read all linked docs and acceptance crite
 ## User-test bugs
 For each bug seen in a real manual run, create a `user-test-bug` issue with Goal, Description, exact steps, actual/expected result, and browser. PM grooms it. Add a failing regression case before fixing. QA repeats the original steps and the regression test, posts evidence, and closes only on PASS. Never fabricate test evidence or bug reports.
 
+---
 
-# Source file: `docs/user-test-bugs.md`
+## `docs/user-test-bugs.md`
 
 # User-test bug report (GitHub issue draft)
 
@@ -367,10 +385,11 @@ During the first real browser run, the page displayed blank because an unbalance
 - Open Add observation, create a note, and verify it appears in the map and detail panel.
 
 ## QA result
-PASS after fix. `node --check app.js` passed; browser loaded the seeded atlas, displayed six seed observations, and created a seventh observation with place/tags. The issue is ready to be imported and closed by QA in GitHub; no GitHub issue could be created in this environment because no repository or authenticated GitHub integration is available.
+PASS after fix. `node --check app.js` passed; browser loaded the seeded atlas, displayed six seed observations, and created a seventh observation with place/tags. GitHub issue #2 in `Sabyrzhan01/fieldnote-atlas` uses the `user-test-bug` label, includes the reproduction and regression checks, and was closed with a QA PASS comment after verification.
 
+---
 
-# Source file: `issues/mvp/01-bootstrap-runnable-project.md`
+## `issues/mvp/01-bootstrap-runnable-project.md`
 
 ## Goal
 A student can start the application and run repeatable checks.
@@ -387,8 +406,9 @@ A student can start the application and run repeatable checks.
 - Root scripts, README, and tests.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/02-editorial-atlas-shell.md`
+## `issues/mvp/02-editorial-atlas-shell.md`
 
 ## Goal
 A visitor can understand the active research collection and navigate the main workspace.
@@ -406,8 +426,9 @@ A visitor can understand the active research collection and navigate the main wo
 - Follow `docs/design-system.md`; keep fictional Almaty demo data.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/03-seeded-observations.md`
+## `issues/mvp/03-seeded-observations.md`
 
 ## Goal
 The demo contains varied, contextualized qualitative evidence.
@@ -424,8 +445,9 @@ The demo contains varied, contextualized qualitative evidence.
 - Use one shared seed dataset and do not add personal interview data.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/04-map-selection.md`
+## `issues/mvp/04-map-selection.md`
 
 ## Goal
 Selecting a map pin opens the matching observation detail.
@@ -443,8 +465,9 @@ Selecting a map pin opens the matching observation detail.
 - Keep map UI independent from evidence-detail rendering.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/05-search-evidence.md`
+## `issues/mvp/05-search-evidence.md`
 
 ## Goal
 A researcher can find notes by title, body, or tags.
@@ -463,8 +486,9 @@ A researcher can find notes by title, body, or tags.
 - Search must not mutate source note content.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/06-filter-evidence.md`
+## `issues/mvp/06-filter-evidence.md`
 
 ## Goal
 A researcher can switch between all, starred, and interview notes.
@@ -483,8 +507,9 @@ A researcher can switch between all, starred, and interview notes.
 - Use same result set for map and detail selection.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/07-create-fieldnote.md`
+## `issues/mvp/07-create-fieldnote.md`
 
 ## Goal
 A researcher can add a contextual field note.
@@ -503,8 +528,9 @@ A researcher can add a contextual field note.
 - Keep client calls in the service layer; API validates inputs.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/08-star-observations.md`
+## `issues/mvp/08-star-observations.md`
 
 ## Goal
 A researcher can mark notes and retain that choice.
@@ -522,8 +548,9 @@ A researcher can mark notes and retain that choice.
 - Use one service interface for mock and API implementations.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/09-openapi-contract.md`
+## `issues/mvp/09-openapi-contract.md`
 
 ## Goal
 Frontend and backend share a clear, verifiable contract.
@@ -541,8 +568,9 @@ Frontend and backend share a clear, verifiable contract.
 - Keep root `openapi.yaml` canonical.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/10-in-memory-api.md`
+## `issues/mvp/10-in-memory-api.md`
 
 ## Goal
 The API contract works without persistent storage for rapid integration.
@@ -561,8 +589,9 @@ The API contract works without persistent storage for rapid integration.
 - Keep storage behind a repository boundary.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/11-connect-frontend-api.md`
+## `issues/mvp/11-connect-frontend-api.md`
 
 ## Goal
 The same UI can use the HTTP API while mock mode remains usable.
@@ -581,8 +610,9 @@ The same UI can use the HTTP API while mock mode remains usable.
 - No backend calls outside frontend service/data boundary.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/12-sqlite-repository.md`
+## `issues/mvp/12-sqlite-repository.md`
 
 ## Goal
 Observations persist in a relational database after process restart.
@@ -601,8 +631,9 @@ Observations persist in a relational database after process restart.
 - Document the tested DB path and ORM path separately.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/13-integrated-walkthrough.md`
+## `issues/mvp/13-integrated-walkthrough.md`
 
 ## Goal
 A researcher can complete a full end-to-end workflow with persistence.
@@ -621,8 +652,9 @@ A researcher can complete a full end-to-end workflow with persistence.
 - Use `docs/testing-guidelines.md`.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
 
+---
 
-# Source file: `issues/mvp/14-independent-qa-close.md`
+## `issues/mvp/14-independent-qa-close.md`
 
 ## Goal
 MVP issues close only after QA evidence supports each criterion.
