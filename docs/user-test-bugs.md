@@ -36,6 +36,6 @@ PASS after fix. `node --check app.js` passed; browser loaded the seeded atlas, d
 
 **Reproduction:** Start the app in API mode with the SQLite seed; select Quiet infrastructures. Expected: zero observations, no stale detail or pins, and accurate count. Actual before fix: six stale observations and an incorrect count.
 
-**Fix:** Scope the live UI and React frontend by `collection_id`, compute counts from scoped observations, clear selection when switching, and preserve the selected collection when creating notes in mock, FastAPI, and standard-library SQLite backends. Reject unknown collection IDs.
+**Fix:** Scope the canonical UI by `collection_id`, compute counts from scoped observations, clear selection when switching, and preserve the selected collection when creating notes in mock and FastAPI/SQLAlchemy SQLite modes. Reject unknown collection IDs.
 
 **Regression:** See `docs/testing-guidelines.md` cases 9–12; automated repository and route tests plus manual Chrome API and mock walkthrough passed. GitHub issue #16 was closed by QA after PASS evidence.

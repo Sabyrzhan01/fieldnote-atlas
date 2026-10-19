@@ -18,6 +18,9 @@ GitHub Issues are the canonical backlog after a GitHub remote is configured. Eve
 - Engineer implements one groomed issue using `docs/team/software-engineer.md`; never closes it.
 - QA checks the running result against acceptance criteria using `docs/team/qa-engineer.md`, posts PASS/FAIL evidence, and closes a passing issue.
 
+## Orchestrator and loop
+The main development session coordinates the role handoffs and does not report its implementation work as independent QA. For each issue: (1) choose an open backlog item, (2) PM grooms it, (3) engineer implements and leaves it open, (4) QA independently checks the running result without editing code, (5) FAIL returns to engineering with the QA comment, (6) QA posts a PASS comment and closes only after every criterion passes, (7) repeat until the selected backlog scope is complete. The `/goal` loop stop condition is checkable: every issue in the chosen label/scope is either closed after PASS or explicitly deferred in a linked post-MVP issue.
+
 ## Bug loop
 When a bug is found during hands-on app use, create a GitHub issue labeled `user-test-bug` with a **Goal** and **Description**, reproduction steps, observed/expected behavior, and environment. PM grooms it; QA adds the missing regression cases to `docs/testing-guidelines.md` and the relevant test suite. Fix, repeat the same user journey, post QA verdict, then close. Do not invent user-test bugs when none were observed.
 

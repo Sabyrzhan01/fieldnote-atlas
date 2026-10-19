@@ -1,6 +1,6 @@
 # GitHub issue backlog
 
-Labels `mvp`, `post-mvp`, and `user-test-bug` exist in [the project repository](https://github.com/Sabyrzhan01/fieldnote-atlas). The 14 groomed issue bodies are in `issues/mvp/`; they have been adapted into the GitHub backlog. All 14 MVP issues and both browser-discovered `user-test-bug` issues are QA-commented and closed. GitHub Issues are canonical for current status. The import script is for a fresh fork only; do not run it against the existing repository, where it would create duplicates.
+Labels `mvp`, `post-mvp`, and `user-test-bug` exist in [the project repository](https://github.com/Sabyrzhan01/fieldnote-atlas). The 14 groomed MVP bodies are in `issues/mvp/`; five scoped follow-ups are in `issues/post-mvp/`. GitHub Issues are canonical for current status. MVP and user-test-bug issue closure is documented in their comments and `docs/qa-results.md`; five post-MVP issues #17–#21 are open as deferred scope. The import script is for a fresh fork only; do not run it against the existing repository, where it would create duplicates.
 
 ## MVP
 1. **Bootstrap app shell and passing checks** — Goal: runnable frontend/backend project skeleton. AC: production build succeeds; backend health endpoint succeeds; root instructions work.
@@ -19,12 +19,14 @@ Labels `mvp`, `post-mvp`, and `user-test-bug` exist in [the project repository](
 14. **Run independent QA and close MVP** — Goal: evidence-based acceptance. AC: build/backend checks pass; manual walkthrough recorded; all MVP issues have QA PASS comments and are closed by QA.
 
 ## Post-MVP
-- Add place geocoding and real map tiles with attribution.
-- Add edit/delete and undo for observations.
-- Add explicit relationship creation and collection management.
-- Add CSV/Markdown export and richer source attachments.
-- Add mobile layout and keyboard navigation.
-- Add optional multi-researcher sharing and permissions.
+Five detailed follow-up issues are specified in `issues/post-mvp/` and tracked as open GitHub issues with the `post-mvp` label:
+- [Edit observations](../issues/post-mvp/01-edit-observations.md)
+- [Delete and undo](../issues/post-mvp/02-delete-and-undo.md)
+- [Evidence connections](../issues/post-mvp/03-evidence-connections.md)
+- [Collection management](../issues/post-mvp/04-collections-management.md)
+- [Export and mobile workflow](../issues/post-mvp/05-export-and-mobile.md)
+
+Additional candidates after these scoped issues: place geocoding/map tiles with attribution, richer source attachments, and multi-researcher sharing/permissions.
 
 ## User-test bug procedure
 Create a new `user-test-bug` issue only after a real manual test finds a defect. Include **Goal** and **Description**, steps, expected/actual behavior, and browser. PM grooms; QA adds regression cases; QA closes only after retest PASS.

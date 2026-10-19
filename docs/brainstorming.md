@@ -10,7 +10,7 @@ Candidate ideas included a neighborhood soundwalk archive, a personal museum of 
 An independent researcher, designer, journalist, urbanist, or student collects field observations, interview fragments, artifacts, and signals. Each item retains its place, date, source, tags, and links to related evidence. A map and reading panel help the researcher spot patterns across locations and visits.
 
 ## Part I comparison
-Part I was StudyFlow, a local student task planner for assignments, due dates, priorities, completion, filters, and progress stored in browser localStorage. Part II is Fieldnote Atlas, a map-based archive for place-based research observations, evidence sources, tags, and collections. The projects address different users and problems and have different core workflows; Fieldnote Atlas is distinct from StudyFlow.
+The student confirmed that Part I was not completed. There is no Part I project to compare against; this project is the project idea developed for this assignment.
 
 ## MVP decisions
 - Desktop-first local app; no login or collaboration in MVP.
@@ -21,4 +21,4 @@ Part I was StudyFlow, a local student task planner for assignments, due dates, p
 - Visual direction: warm editorial research journal, muted cartography, terracotta pins, serif titles, mono metadata. Inspiration pointers are in `design-system.md`.
 
 ## Build workflow
-The MVP follows five inspectable checkpoints: frontend with mock service; OpenAPI verified against the service boundary; in-memory backend; SQLAlchemy/SQLite repository; frontend connected to persistent backend. GitHub Issues are canonical in `Sabyrzhan01/fieldnote-atlas`; current issue state is recorded in `docs/issues.md`.
+The MVP follows five inspectable checkpoints: frontend with mock service; OpenAPI verified against the service boundary; in-memory backend; SQLAlchemy/SQLite repository; frontend connected to persistent backend. GitHub Issues are canonical in `Sabyrzhan01/fieldnote-atlas`; current issue state is recorded in GitHub and `docs/issues.md`.
