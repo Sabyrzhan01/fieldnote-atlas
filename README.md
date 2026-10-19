@@ -2,21 +2,22 @@
 
 **A visual field-research archive for the details that make a place feel like itself.** Collect observations, interview fragments, artifacts, and signals; keep their sources and tags attached; explore the evidence on a map.
 
-![Fieldnote Atlas concept: editorial map-led research archive](docs/design-system.md)
+![Fieldnote Atlas running against the SQLAlchemy and SQLite backend](docs/screenshots/fieldnote-atlas.jpg)
+
+The map is a hand-composed Almaty study surface with selectable evidence pins, a fieldnote reader, and an editorial collection archive.
 
 ## Run locally
 
-Requirement: Python 3.11+ (no third-party packages are needed for the runnable edition).
+Requirement: Python 3.11+ and the packages in `backend/requirements.txt`.
 
 ```sh
+python3 -m pip install -r backend/requirements.txt
 python3 server.py
 ```
 
-Open `http://127.0.0.1:8091/` for the localStorage mock-service edition. Open `http://127.0.0.1:8091/?api=1` for the frontend connected to the SQLite API. The API can be checked at `/api/health` and `/api/atlas`.
+Open `http://127.0.0.1:8091/`. The canonical frontend talks to FastAPI, which uses SQLAlchemy with SQLite by default. Data persists in `fieldnote-atlas.sqlite3`; set `FIELDNOTE_DB_URL` to use another SQLAlchemy-supported database URL. Set `FIELDNOTE_REPOSITORY=memory` to run the in-memory API iteration. Open `/?mock=1` for the local mock-service iteration. API health and data are available at `/api/health` and `/api/atlas`.
 
-The default runnable API uses Python's SQLite DB-API so it can run offline with the system Python. `backend/app/` also contains a FastAPI API with in-memory and SQLAlchemy repository implementations. Install `backend/requirements.txt` to run that ORM-backed path; it has been exercised with FastAPI's test client and a SQLite database.
-
-Optional frontend convenience commands, if `npm` is available:
+Optional commands:
 
 ```sh
 npm run dev
@@ -24,16 +25,15 @@ npm test
 npm run build
 ```
 
-`npm run dev` delegates to the same dependency-free Python server. SQLite state is written to `fieldnote.db`; use `FIELDNOTE_DB_PATH` to choose another file.
+`npm run dev` starts the same FastAPI application. The canonical frontend is `index.html`, `app.js`, and `style.css` at the repository root. There is one app entry point.
 
 ## Project map
-- `frontend/` — React, TypeScript, Vite; mock and API service implementations
-- `backend/` — FastAPI; in-memory and SQLAlchemy repository modes
+- `backend/` — FastAPI; SQLAlchemy/SQLite default and in-memory workflow mode
 - `openapi.yaml` — frontend/backend contract
 - `docs/` — product spec, brainstorm, design brief, test/process guidance, backlog, role briefs
 
 ## Workflow
-This project follows the staged path in `docs/process.md`: mock-backed frontend → OpenAPI contract → in-memory backend → SQLite through SQLAlchemy → integrated frontend/backend. The GitHub repository is [Sabyrzhan01/fieldnote-atlas](https://github.com/Sabyrzhan01/fieldnote-atlas). It has the `mvp`, `post-mvp`, and `user-test-bug` labels. Groomed MVP issue bodies are in `issues/mvp/`; the GitHub backlog has 14 MVP issues and two user-test-bug issues, each with QA comments and closed after passing checks.
+This project follows the staged path in `docs/process.md`: mock-backed frontend → OpenAPI contract → in-memory backend → SQLite through SQLAlchemy → integrated frontend/backend. The GitHub repository is [Sabyrzhan01/fieldnote-atlas](https://github.com/Sabyrzhan01/fieldnote-atlas). It has the `mvp`, `post-mvp`, and `user-test-bug` labels. Groomed issue bodies are stored under `issues/` and mirrored as GitHub issues.
 
 ## Status
-Runnable dependency-free edition and the optional FastAPI/SQLAlchemy edition are verified. API checks passed for seed, selected-collection create, invalid input, star, SQLite persistence across fresh processes, delete, and not-found. The Chrome walkthrough verified first render, search, starred filtering, local mock creation, SQLite API-backed creation, and collection scoping including the empty state. JavaScript/Python syntax checks, OpenAPI parsing, five repository tests, in-memory API checks, and SQLAlchemy persistence checks pass. Both real browser bugs were recorded as `user-test-bug` GitHub issues, fixed, regression-checked, and closed by QA.
+The canonical SQLAlchemy/SQLite edition and mock iteration are verified. API checks cover seed, selected-collection create, invalid input, star, persistence, delete, and not-found. See `docs/qa-results.md` for commands and walkthrough evidence. GitHub issues track implementation and user-test bugs.

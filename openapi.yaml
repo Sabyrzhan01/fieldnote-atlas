@@ -64,7 +64,7 @@ components:
         observationCount: {type: integer}
     Observation:
       type: object
-      required: [id, collection_id, title, body, kind, place, region, date, color, tags, source, starred]
+      required: [id, collection_id, title, body, kind, place, region, date, color, tags, source, starred, x, y]
       properties:
         id: {type: string}
         collection_id: {type: string}
@@ -78,6 +78,8 @@ components:
         tags: {type: array, items: {type: string}}
         source: {type: string}
         starred: {type: boolean}
+        x: {type: number, minimum: 0, maximum: 100, description: Horizontal position on the schematic map}
+        y: {type: number, minimum: 0, maximum: 100, description: Vertical position on the schematic map}
     ObservationInput:
       type: object
       required: [title, body, kind, place, region, date, color, tags, source, starred]
@@ -93,6 +95,8 @@ components:
         tags: {type: array, items: {type: string, maxLength: 40}}
         source: {type: string}
         starred: {type: boolean}
+        x: {type: number, minimum: 0, maximum: 100, default: 50}
+        y: {type: number, minimum: 0, maximum: 100, default: 50}
     AtlasData:
       type: object
       required: [collections, observations]
