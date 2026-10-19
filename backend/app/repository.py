@@ -1,5 +1,6 @@
-"""Repository implementations. Set FIELDNOTE_DB_URL to use SQLAlchemy/SQLite."""
+"""Repository implementations. SQLite/SQLAlchemy is the default; set FIELDNOTE_DB_URL to override it."""
 import os
+from pathlib import Path
 from copy import deepcopy
 from uuid import uuid4
 from .seed import COLLECTIONS, seeded
@@ -34,7 +35,7 @@ class SQLiteRepository:
             id:Mapped[str]=mapped_column(String,primary_key=True); title:Mapped[str]=mapped_column(String); subtitle:Mapped[str]=mapped_column(String); color:Mapped[str]=mapped_column(String)
         class ObservationRow(Base):
             __tablename__='observations'
-            id:Mapped[str]=mapped_column(String,primary_key=True); collection_id:Mapped[str]=mapped_column(ForeignKey('collections.id')); title:Mapped[str]=mapped_column(String(120)); body:Mapped[str]=mapped_column(Text); kind:Mapped[str]=mapped_column(String); place:Mapped[str]=mapped_column(String); region:Mapped[str]=mapped_column(String); date:Mapped[str]=mapped_column(String); color:Mapped[str]=mapped_column(String); tags:Mapped[list]=mapped_column(JSON); source:Mapped[str]=mapped_column(String); starred:Mapped[bool]=mapped_column(Boolean,default=False)
+            id:Mapped[str]=mapped_column(String,primary_key=True); collection_id:Mapped[str]=mapped_column(ForeignKey('collections.id')); title:Mapped[str]=mapped_column(String(120)); body:Mapped[str]=mapped_column(Text); kind:Mapped[str]=mapped_column(String); place:Mapped[str]=mapped_column(String); region:Mapped[str]=mapped_column(String); date:Mapped[str]=mapped_column(String); color:Mapped[str]=mapped_column(String); tags:Mapped[list]=mapped_column(JSON); source:Mapped[str]=mapped_column(String); starred:Mapped[bool]=mapped_column(Boolean,default=False); x:Mapped[float]=mapped_column(default=50); y:Mapped[float]=mapped_column(default=50)
         Base.metadata.create_all(engine); self.Session=sessionmaker(engine,expire_on_commit=False); self.C=CollectionRow; self.O=ObservationRow
         with self.Session() as s:
             if not s.get(CollectionRow,'c1'):
@@ -47,7 +48,7 @@ class SQLiteRepository:
             for c in s.scalars(self.sa[6](self.C)).all():
                 collections.append({"id":c.id,"title":c.title,"subtitle":c.subtitle,"color":c.color,"observationCount":len(s.scalars(self.sa[6](self.O).where(self.O.collection_id==c.id)).all())})
             observations=[]
-            for o in s.scalars(self.sa[6](self.O)).all(): observations.append({"id":o.id,"collection_id":o.collection_id,"title":o.title,"body":o.body,"kind":o.kind,"place":o.place,"region":o.region,"date":o.date,"color":o.color,"tags":o.tags,"source":o.source,"starred":o.starred})
+            for o in s.scalars(self.sa[6](self.O)).all(): observations.append({"id":o.id,"collection_id":o.collection_id,"title":o.title,"body":o.body,"kind":o.kind,"place":o.place,"region":o.region,"date":o.date,"color":o.color,"tags":o.tags,"source":o.source,"starred":o.starred,"x":o.x,"y":o.y})
             return {"collections":collections,"observations":observations}
     def create(self,item):
         from .schemas import ObservationInput
@@ -68,5 +69,8 @@ class SQLiteRepository:
         return self.list_atlas()
 
 def make_repository():
-    url=os.getenv('FIELDNOTE_DB_URL')
-    return SQLiteRepository(url) if url else MemoryRepository()
+    if os.getenv('FIELDNOTE_REPOSITORY','sqlite').lower() == 'memory':
+        return MemoryRepository()
+    default_db=(Path(__file__).resolve().parents[2]/'fieldnote-atlas.sqlite3').as_posix()
+    url=os.getenv('FIELDNOTE_DB_URL') or f'sqlite:///{default_db}'
+    return SQLiteRepository(url)

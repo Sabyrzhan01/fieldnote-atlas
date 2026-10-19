@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from .repository import make_repository
 from .schemas import AtlasData, ObservationInput
 
@@ -25,3 +27,8 @@ def delete_observation(observation_id:str):
     result=repository.delete(observation_id)
     if result is None: raise HTTPException(status_code=404,detail='Observation not found')
     return result
+
+# The root vanilla frontend is canonical. Serve it from the same FastAPI
+# process so its /api requests always hit the SQLAlchemy-backed app above.
+WEB_ROOT = Path(__file__).resolve().parents[2]
+app.mount('/', StaticFiles(directory=WEB_ROOT, html=True), name='web')

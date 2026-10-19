@@ -12,6 +12,8 @@ class ObservationInput(BaseModel):
     tags: list[str] = Field(default_factory=list)
     source: str
     starred: bool = False
+    x: float = 50
+    y: float = 50
 
 class Observation(ObservationInput):
     id: str
