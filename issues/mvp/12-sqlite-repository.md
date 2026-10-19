@@ -6,11 +6,11 @@ Observations persist in a relational database after process restart.
 - [ ] Seed runs once and does not duplicate rows.
 - [ ] Create/star/delete operations persist after a new connection.
 - [ ] Repository boundary is independent of backend DBMS.
-- [ ] Use SQLAlchemy implementation when dependencies are available; standard-library SQLite supports offline run.
+- [x] Use SQLAlchemy as the DBMS-agnostic ORM for the default SQLite repository.
 
 ## Out of scope
 - Cloud database and migrations service.
 
 ## Constraints
-- Document the tested DB path and ORM path separately.
+- Document SQLAlchemy/SQLite as the default tested path; keep the in-memory repository for the staged workflow.
 - Follow `docs/spec.md`, `docs/process.md`, and role instructions.
