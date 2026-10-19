@@ -9,6 +9,9 @@ Candidate ideas included a neighborhood soundwalk archive, a personal museum of 
 ## Chosen idea: Fieldnote Atlas
 An independent researcher, designer, journalist, urbanist, or student collects field observations, interview fragments, artifacts, and signals. Each item retains its place, date, source, tags, and links to related evidence. A map and reading panel help the researcher spot patterns across locations and visits.
 
+## Part I comparison
+Part I was StudyFlow, a local student task planner for assignments, due dates, priorities, completion, filters, and progress stored in browser localStorage. Part II is Fieldnote Atlas, a map-based archive for place-based research observations, evidence sources, tags, and collections. The projects address different users and problems and have different core workflows; Fieldnote Atlas is distinct from StudyFlow.
+
 ## MVP decisions
 - Desktop-first local app; no login or collaboration in MVP.
 - Seed with fictional Almaty observations to create a compelling demo without exposing private data.
@@ -18,4 +21,4 @@ An independent researcher, designer, journalist, urbanist, or student collects f
 - Visual direction: warm editorial research journal, muted cartography, terracotta pins, serif titles, mono metadata. Inspiration pointers are in `design-system.md`.
 
 ## Build workflow
-The MVP follows five inspectable checkpoints: frontend with mock service; OpenAPI verified against the service boundary; in-memory backend; SQLAlchemy/SQLite repository; frontend connected to persistent backend. The GitHub issue backlog is canonical in `Sabyrzhan01/fieldnote-atlas`; all 14 MVP issues and both real browser-found bug issues have QA PASS comments and are closed.
+The MVP follows five inspectable checkpoints: frontend with mock service; OpenAPI verified against the service boundary; in-memory backend; SQLAlchemy/SQLite repository; frontend connected to persistent backend. GitHub Issues are canonical in `Sabyrzhan01/fieldnote-atlas`; current issue state is recorded in `docs/issues.md`.
