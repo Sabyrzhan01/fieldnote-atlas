@@ -119,4 +119,37 @@ class SQLiteRepositoryTests(unittest.TestCase):
             else:
                 os.environ.pop('DATABASE_URL', None)
 
+    def test_openapi_observation_input_validation_rejects_invalid_payloads(self):
+        from fastapi.testclient import TestClient
+        from app.main import app
+        client = TestClient(app)
+        baseline = {
+            'collection_id': 'c1',
+            'title': 'Valid observation',
+            'body': 'Valid body text',
+            'kind': 'Field note',
+            'place': 'Abay Ave',
+            'region': 'Almaty',
+            'date': 'Today',
+            'color': '#d87551',
+            'tags': ['rain'],
+            'source': 'Walk',
+            'starred': False,
+            'x': 50,
+            'y': 50,
+        }
+        invalid_mutations = [
+            {'kind': 'UnknownKind'},
+            {'x': -1},
+            {'x': 101},
+            {'y': -0.5},
+            {'y': 100.5},
+            {'tags': ['a' * 41]},
+            {'title': '   '},
+            {'body': '   '},
+        ]
+        for mod in invalid_mutations:
+            resp = client.post('/api/observations', json={**baseline, **mod})
+            self.assertEqual(resp.status_code, 422, f"Expected 422 for {mod}, got {resp.status_code}")
+
 if __name__=='__main__': unittest.main()

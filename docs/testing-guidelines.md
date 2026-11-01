@@ -19,6 +19,8 @@
 10. Search and apply Starred/Interviews filters after switching collections; results must remain scoped to the active collection.
 11. Create a note from each collection in mock and API modes; verify `collection_id`, counts, visibility after reload, and persistence in that same collection.
 12. Submit an observation for an unknown collection through each API backend; expect 422 and no inserted row.
+13. Submit `POST /api/observations` payloads violating OpenAPI constraints (unknown `kind`, `x`/`y` outside `0..100`, tag `> 40` chars, whitespace-only `title` or `body`); expect 422 (`#31`).
+14. Inspect `.detail .tags button[data-tag]` bounding boxes at desktop width (`1280x800` / `1280x720`) and verify tag chips do not overlap horizontally (`#32`).
 
 ## User-test bugs
 For each bug seen in a real manual run, create a `user-test-bug` issue with Goal, Description, exact steps, actual/expected result, and browser. PM grooms it. Add a failing regression case before fixing. QA repeats the original steps and the regression test, posts evidence, and closes only on PASS. Never fabricate test evidence or bug reports.
