@@ -61,6 +61,12 @@ LABELS = [
 ]
 
 def make_request(url, method="GET", data=None, token=None):
+    import ssl
+    try:
+        import certifi
+        ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        ssl_ctx = ssl.create_default_context()
     headers = {
         "Accept": "application/vnd.github.v3+json",
         "User-Agent": "fieldnote-atlas-sync-script"
@@ -70,7 +76,7 @@ def make_request(url, method="GET", data=None, token=None):
     body = json.dumps(data).encode("utf-8") if data else None
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, context=ssl_ctx) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         err_msg = e.read().decode("utf-8")
