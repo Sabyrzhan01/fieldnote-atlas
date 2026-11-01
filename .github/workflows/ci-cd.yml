@@ -1,0 +1,128 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-backend:
+    name: Backend & PostgreSQL Integration Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: fieldnote
+          POSTGRES_PASSWORD: fieldnote
+          POSTGRES_DB: fieldnote_atlas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Verify Python compilation
+        run: python -m compileall -q backend server.py scripts
+
+      - name: Run Backend Unit Tests (SQLite & In-Memory)
+        run: python -m unittest discover -s backend/tests -v
+
+      - name: Test Database Migration (SQLite -> PostgreSQL)
+        env:
+          DATABASE_URL: postgresql://fieldnote:fieldnote@localhost:5432/fieldnote_atlas
+        run: |
+          python scripts/migrate_sqlite_to_postgres.py --target "$DATABASE_URL"
+
+  test-frontend:
+    name: Frontend Unit & Syntax Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check services.js
+
+      - name: Run Frontend Service Unit Tests
+        run: node --test frontend/tests/services.test.js
+
+  test-e2e:
+    name: Playwright End-to-End Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install playwright pytest pytest-playwright pytest-asyncio httpx
+          playwright install --with-deps chromium
+
+      - name: Execute Playwright E2E Suite
+        run: pytest tests/e2e -v
+
+      - name: Upload Test Report Artifacts on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/
+          retention-days: 7
+
+  deploy:
+    name: Continuous Deployment (Re-deploy on Commit)
+    needs: [test-backend, test-frontend, test-e2e]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Trigger Render Deployment Hook
+        if: env.RENDER_DEPLOY_HOOK_URL != ''
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          echo "Triggering automated re-deployment to Render..."
+          curl -f -X POST "$RENDER_DEPLOY_HOOK_URL"
+
+      - name: Deployment Completed
+        run: |
+          echo "All checks passed! Deployment initiated successfully on commit ${{ github.sha }}."

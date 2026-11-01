@@ -35,3 +35,28 @@ Additional candidates after these scoped issues: place geocoding/map tiles with 
 
 ## User-test bug procedure
 Create a new user-test-bug issue only after a real manual test finds a defect. Include Goal and Description, steps, expected/actual behavior, and browser. PM grooms; QA adds regression cases; QA closes only after retest PASS.
+
+## Assignment 2: Test, Containerise, and Deploy Backlog
+
+### Playwright End-to-End Tests (`e2e-test`)
+Ten comprehensive end-to-end test issues covering every feature separately, located in `issues/e2e-tests/`:
+1. [01. Editorial Atlas Shell & Collection Navigation](../issues/e2e-tests/01-editorial-atlas-shell.md) — Goal: verify header, sidebar, branding, collections, and workspace navigation with Playwright.
+2. [02. Interactive Map Observation Pin Selection](../issues/e2e-tests/02-map-pin-selection.md) — Goal: verify map rendering, pin coordinates, active pin state, and reader synchronization.
+3. [03. Real-Time Observation Search](../issues/e2e-tests/03-search-observations.md) — Goal: verify case-insensitive search by title, body, and tag with real-time pin updates.
+4. [04. Filter Cycling (All Notes, Starred, Interviews)](../issues/e2e-tests/04-filter-observations.md) — Goal: verify category filter cycling and accurate pin subset display.
+5. [05. Create Fieldnote Observation Modal](../issues/e2e-tests/05-create-fieldnote.md) — Goal: verify create modal dialog, validation, toast alert, and instant map update.
+6. [06. Star and Unstar Observations](../issues/e2e-tests/06-star-observation.md) — Goal: verify favorite toggle, heart icons, toast notifications, and DB persistence.
+7. [07. Tag Chip Filtering Navigation](../issues/e2e-tests/07-tag-navigation.md) — Goal: verify clicking tag chips in reader filters observations.
+8. [08. Connected Evidence Navigation](../issues/e2e-tests/08-connected-observations.md) — Goal: verify clicking linked evidence transitions to related observation.
+9. [09. Export Atlas JSON Archive](../issues/e2e-tests/09-export-atlas.md) — Goal: verify export button triggers valid `fieldnote-atlas.json` download.
+10. [10. Full API & Database Persistence Lifecycle](../issues/e2e-tests/10-api-persistence.md) — Goal: verify client-server and database persistence lifecycle across browser reloads.
+
+### DevOps, Containerization & Cloud Deployment (`devops`)
+Seven infrastructure and deployment issues located in `issues/devops/`:
+1. [01. Single Production Dockerfile](../issues/devops/01-single-dockerfile.md) — Goal: bundle static frontend and FastAPI backend into a single non-root Docker container.
+2. [02. SQLite to PostgreSQL Migration](../issues/devops/02-sqlite-to-postgres-migration.md) — Goal: SQLAlchemy dual-DB support and migration script (`migrate_sqlite_to_postgres.py`).
+3. [03. Multi-Container Docker Compose Stack](../issues/devops/03-docker-compose-stack.md) — Goal: turn-key Docker Compose stack for app + PostgreSQL 16.
+4. [04. PaaS Deployment (Render, Railway, Vercel)](../issues/devops/04-render-railway-vercel-deployment.md) — Goal: declarative configuration files for Render, Railway, and Vercel.
+5. [05. AWS CloudFormation Free-Tier Deployment](../issues/devops/05-aws-cloudformation-free-tier.md) — Goal: 100% Free Tier CloudFormation template on EC2 t2/t3.micro with 20GB EBS.
+6. [06. GCP Terraform Free-Tier Deployment](../issues/devops/06-gcp-terraform-free-tier.md) — Goal: Terraform config for Google Cloud Always Free tier (`e2-micro`, 25GB disk).
+7. [07. GitHub Actions CI/CD Pipeline](../issues/devops/07-github-actions-ci-cd.md) — Goal: automated testing across Python, Node, and Playwright, and deployment on commit to `main`.

@@ -1,1 +1,18 @@
-{"name":"fieldnote-atlas","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"python3 server.py","test":"python3 -m unittest discover -s backend/tests -v && node --test frontend/tests/services.test.js","build":"python3 -m compileall -q backend server.py && node --check app.js && node --check services.js"}}
+{
+  "name": "fieldnote-atlas",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "python3 server.py",
+    "test": "python3 -m unittest discover -s backend/tests -v",
+    "test:unit": "python3 -m unittest discover -s backend/tests -v",
+    "test:e2e": "pytest tests/e2e -v",
+    "test:all": "npm run test:unit && npm run test:e2e",
+    "build": "python3 -m compileall -q backend server.py",
+    "docker:build": "docker build -t fieldnote-atlas .",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "db:migrate": "python3 scripts/migrate_sqlite_to_postgres.py"
+  }
+}

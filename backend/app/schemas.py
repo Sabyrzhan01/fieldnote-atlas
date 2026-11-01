@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
 class ObservationInput(BaseModel):
+    id: str | None = None
     collection_id: str = 'c1'
     title: str = Field(min_length=1, max_length=120)
     body: str = Field(min_length=1, max_length=1000)

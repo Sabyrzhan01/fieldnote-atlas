@@ -5,3 +5,11 @@ __pycache__/
 *.db
 *.sqlite3
 .venv/
+.pytest_cache/
+test-results/
+playwright-report/
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+.DS_Store

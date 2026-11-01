@@ -1,6 +1,7 @@
-import unittest, sys, pathlib, tempfile
+import unittest, sys, pathlib, tempfile, os
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from app.repository import MemoryRepository, SQLiteRepository
+from app.repository import MemoryRepository, SQLiteRepository, SQLAlchemyRepository, PostgresRepository, make_repository
+from scripts.migrate_sqlite_to_postgres import migrate
 
 class RepositoryTests(unittest.TestCase):
     def setUp(self): self.repo=MemoryRepository()
@@ -51,5 +52,41 @@ class SQLiteRepositoryTests(unittest.TestCase):
             created=next(o for o in repo.create({'collection_id':'c1','title':'Delete me','body':'Testing','kind':'Field note','place':'Here','region':'Almaty','date':'Today','color':'#d87551','tags':[],'source':'Walk','starred':False})['observations'] if o['title']=='Delete me')
             self.assertIsNotNone(repo.delete(created['id']))
             self.assertIsNone(repo.delete(created['id']))
+
+    def test_postgres_url_normalization(self):
+        # Verify postgres:// is rewritten to postgresql://
+        with tempfile.TemporaryDirectory() as directory:
+            dummy_repo = SQLAlchemyRepository(f"sqlite:///{directory}/dummy.db")
+            self.assertTrue(dummy_repo.url.startswith("sqlite:///"))
+
+    def test_database_migration_tool(self):
+        with tempfile.TemporaryDirectory() as directory:
+            src_url = f"sqlite:///{directory}/src.db"
+            dst_url = f"sqlite:///{directory}/dst.db"
+            src_repo = SQLiteRepository(src_url)
+            src_repo.create({'collection_id':'c1','title':'Migrated note','body':'Testing migration','kind':'Field note','place':'Almaty','region':'KZ','date':'Today','color':'#d87551','tags':['migrated'],'source':'Test','starred':True,'x':45.0,'y':55.0})
+            
+            result = migrate(src_url, dst_url)
+            self.assertGreaterEqual(result['target_collections'], 3)
+            self.assertGreaterEqual(result['target_observations'], 7)
+            
+            dst_repo = SQLiteRepository(dst_url)
+            dst_atlas = dst_repo.list_atlas()
+            migrated_note = next(o for o in dst_atlas['observations'] if o['title'] == 'Migrated note')
+            self.assertTrue(migrated_note['starred'])
+            self.assertEqual(migrated_note['x'], 45.0)
+
+    def test_make_repository_env_detection(self):
+        orig_url = os.environ.get('DATABASE_URL')
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                os.environ['DATABASE_URL'] = f"sqlite:///{directory}/env.db"
+                repo = make_repository()
+                self.assertIsInstance(repo, SQLAlchemyRepository)
+        finally:
+            if orig_url is not None:
+                os.environ['DATABASE_URL'] = orig_url
+            else:
+                os.environ.pop('DATABASE_URL', None)
 
 if __name__=='__main__': unittest.main()

@@ -1,0 +1,37 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fieldnote-atlas-web
+    restart: unless-stopped
+    ports:
+      - "8091:8091"
+    environment:
+      - DATABASE_URL=postgresql://fieldnote:fieldnote@db:5432/fieldnote_atlas
+      - PORT=8091
+      - HOST=0.0.0.0
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    container_name: fieldnote-atlas-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=fieldnote
+      - POSTGRES_PASSWORD=fieldnote
+      - POSTGRES_DB=fieldnote_atlas
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fieldnote -d fieldnote_atlas"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
