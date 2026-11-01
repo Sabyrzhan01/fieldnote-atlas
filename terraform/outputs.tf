@@ -9,6 +9,6 @@ output "application_url" {
 }
 
 output "free_tier_notice" {
-  value       = "Provisioned strictly within Google Cloud Always Free tier (1 e2-micro instance in us-central1 and 25GB standard persistent disk). Free of charge."
-  description = "Free tier cost guarantee notice."
+  value       = "Provisioned with 1x e2-micro instance in us-central1 and 25GB standard persistent disk to align with Google Cloud Free Tier / $300 trial credit allowances. Charges can apply if account quotas, network egress, or trial limits are exceeded; run 'terraform destroy' when not in use."
+  description = "Google Cloud Free Tier and credit usage notice."
 }

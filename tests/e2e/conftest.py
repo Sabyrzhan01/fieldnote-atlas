@@ -27,7 +27,8 @@ def app_server():
     test_db = Path(temp_dir.name) / "e2e_test_atlas.sqlite3"
     
     env = os.environ.copy()
-    env["FIELDNOTE_DB_URL"] = f"sqlite:///{test_db}"
+    if not env.get("FIELDNOTE_DB_URL") and not env.get("DATABASE_URL"):
+        env["FIELDNOTE_DB_URL"] = f"sqlite:///{test_db}"
     env["HOST"] = host
     env["PORT"] = str(port)
     env["PYTHONUNBUFFERED"] = "1"
@@ -69,6 +70,24 @@ def app_server():
 @pytest.fixture(scope="session")
 def base_url(app_server):
     return app_server
+
+@pytest.fixture(autouse=True)
+def reset_custom_observations(base_url):
+    """Ensure each E2E test starts and ends with only the 6 deterministic seed observations."""
+    yield
+    try:
+        with urllib.request.urlopen(f"{base_url}/api/atlas", timeout=2) as resp:
+            import json
+            atlas = json.loads(resp.read().decode("utf-8"))
+            for obs in atlas.get("observations", []):
+                if obs.get("id") not in {"1", "2", "3", "4", "5", "6"}:
+                    req = urllib.request.Request(
+                        f"{base_url}/api/observations/{obs['id']}",
+                        method="DELETE"
+                    )
+                    urllib.request.urlopen(req, timeout=2)
+    except Exception:
+        pass
 
 @pytest.fixture(scope="session")
 def browser_context_args(browser_context_args):

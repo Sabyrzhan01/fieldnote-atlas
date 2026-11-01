@@ -1,14 +1,13 @@
-# Google Cloud Platform Deployment Guide with Terraform (Strict Free Tier)
+# Google Cloud Platform Deployment Guide with Terraform (Free-Tier Sized)
 
-This guide walks through deploying Fieldnote Atlas to Google Cloud Platform using Terraform as the Infrastructure-as-Code tool, strictly utilizing the GCP Free Tier (consuming the \$300 credits and running within the Always Free tier).
+This guide walks through deploying Fieldnote Atlas to Google Cloud Platform using Terraform as the Infrastructure-as-Code tool, sized to fit within Google Cloud's `$300` Free Trial credits and Always Free tier resource limits.
 
 ---
 
-## Free Tier Cost Guarantee
-- **Compute:** 1× `e2-micro` instance per month in `us-central1`, `us-west1`, or `us-east1` (Always Free tier).
-- **Storage:** 25 GB standard persistent disk (`pd-standard`, within the 30 GB/month Always Free quota).
-- **Network Egress:** 1 GB free outbound traffic per month.
-- **Credit Safety:** Safely uses the \$300 initial GCP trial credits with zero risk of overage.
+## GCP Free Tier & Credit Considerations
+- **Compute:** 1× `e2-micro` instance in `us-central1`, `us-west1`, or `us-east1` (eligible for GCP's 1 non-preemptible `e2-micro` instance/month Always Free allowance on qualifying accounts).
+- **Storage:** 25 GB standard persistent disk (`pd-standard`, within the 30 GB/month Always Free standard disk quota).
+- **Network Egress & IPv4 Caveats:** Always Free includes 1 GB/month of North America outbound egress (excluding certain destinations); usage beyond free-tier allowances, external IP pricing changes, or running multiple instances will consume `$300` trial credits or incur billing. Always destroy resources (`terraform destroy`) when no longer needed.
 
 ---
 

@@ -30,45 +30,44 @@ def migrate(source_url: str, target_url: str) -> dict:
     print(f"[*] Read {len(src_collections)} collections and {len(src_observations)} observations from source.")
 
     print(f"[*] Connecting to target: {target_url}")
-    target_repo = SQLAlchemyRepository(target_url)
+    target_repo = SQLAlchemyRepository(target_url, seed_if_empty=False)
 
     # Insert or update collections and observations into target
     with target_repo.Session() as session:
-        # Check existing
         existing_col_ids = {c.id for c in session.query(target_repo.C).all()}
         added_cols = 0
         for col in src_collections:
             if col["id"] not in existing_col_ids:
-                session.add(target_repo.C(
-                    id=col["id"],
-                    title=col["title"],
-                    subtitle=col["subtitle"],
-                    color=col["color"]
-                ))
                 added_cols += 1
+            session.merge(target_repo.C(
+                id=col["id"],
+                title=col["title"],
+                subtitle=col["subtitle"],
+                color=col["color"]
+            ))
         session.commit()
 
         existing_obs_ids = {o.id for o in session.query(target_repo.O).all()}
         added_obs = 0
         for obs in src_observations:
             if obs["id"] not in existing_obs_ids:
-                session.add(target_repo.O(
-                    id=obs["id"],
-                    collection_id=obs.get("collection_id", "c1"),
-                    title=obs["title"],
-                    body=obs["body"],
-                    kind=obs["kind"],
-                    place=obs["place"],
-                    region=obs["region"],
-                    date=obs["date"],
-                    color=obs["color"],
-                    tags=obs.get("tags") or [],
-                    source=obs["source"],
-                    starred=bool(obs.get("starred", False)),
-                    x=float(obs.get("x", 50.0)),
-                    y=float(obs.get("y", 50.0))
-                ))
                 added_obs += 1
+            session.merge(target_repo.O(
+                id=obs["id"],
+                collection_id=obs.get("collection_id", "c1"),
+                title=obs["title"],
+                body=obs["body"],
+                kind=obs["kind"],
+                place=obs["place"],
+                region=obs["region"],
+                date=obs["date"],
+                color=obs["color"],
+                tags=obs.get("tags") or [],
+                source=obs["source"],
+                starred=bool(obs.get("starred", False)),
+                x=float(obs.get("x", 50.0)),
+                y=float(obs.get("y", 50.0))
+            ))
         session.commit()
 
     target_data = target_repo.list_atlas()

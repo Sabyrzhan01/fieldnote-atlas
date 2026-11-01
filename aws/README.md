@@ -1,15 +1,18 @@
-# AWS CloudFormation Deployment Guide (Strict Free Tier)
+# AWS CloudFormation Deployment Guide (Free-Tier Sized Architecture)
 
-This deployment provisions a production-grade Fieldnote Atlas stack on Amazon Web Services using AWS CloudFormation, strictly adhering to the AWS Free Tier (ensuring \$0 expenditure and safely consuming the \$100 credit tier).
+This deployment provisions a Fieldnote Atlas Docker Compose stack on Amazon Web Services using AWS CloudFormation, sized specifically for AWS Free Tier / Free Account credit limits (`$100` promotional/free-account credits) without enabling paid managed services.
 
 ---
 
-## Free Tier Cost Guarantee
-- **Compute:** 1× `t2.micro` or `t3.micro` EC2 instance (750 hours/month free in AWS Free Tier).
-- **Storage:** 20 GB gp3 EBS root volume (AWS provides 30 GB/month EBS for free).
-- **Network Ingress:** Inbound HTTP (port 80 / 8091) is 100% free.
-- **Database:** Runs inside PostgreSQL 16 container on the same instance with local persistent Docker volume.
-- **Paid Features:** 0 paid features enabled. No Load Balancer, no NAT Gateway, no paid RDS instances.
+## AWS Free Tier, Credits & Pricing Considerations
+- **Compute:** 1× `t2.micro` or `t3.micro` EC2 instance (eligible for up to 750 hours/month for 12 months on qualifying AWS Free Tier accounts, or billed against available promotional credits).
+- **Storage:** 20 GB `gp3` EBS root volume with `DeleteOnTermination: true` (within the 30 GB/month 12-month Free Tier EBS allowance on qualifying accounts).
+- **Database:** Runs inside the `postgres:16-alpine` container on the same EC2 instance via Docker Compose rather than provisioning a separate RDS instance.
+- **No Paid Add-on Services:** Does not provision Application Load Balancers, NAT Gateways, or Elastic IPs.
+- **Important Billing & Public IPv4 Caveats:**
+  - AWS does **not** guarantee `$0` billing automatically; actual cost depends on your AWS account's plan, age (12-month Free Tier eligibility vs. credit-based Free Account), region, and remaining promotional credits. See [AWS Free Tier guidance](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier.html).
+  - **Public IPv4 Addressing:** AWS charges `$0.005/hour` for in-use public IPv4 addresses unless covered by active account credits or specific Free Tier allowances. See [AWS EC2 Instance Addressing & Public IPv4 pricing](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html).
+  - Always tear down the stack (`aws cloudformation delete-stack`) when finished testing to avoid exhausting hours or credits.
 
 ---
 

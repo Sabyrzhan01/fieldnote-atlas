@@ -1,9 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  Fieldnote Atlas - Production-grade AWS deployment within strict Free Tier limits.
+  Fieldnote Atlas - AWS deployment sized for Free Tier / Free Account credit limits.
   Deploys Docker Compose stack (FastAPI Static Frontend + Backend + PostgreSQL)
-  on a single free-tier t2.micro / t3.micro EC2 instance with 20GB gp3 storage.
-  Never enables paid features; maintains 100% compliance with AWS Free Tier.
+  on a single free-tier eligible t2.micro / t3.micro EC2 instance with 20GB gp3 storage.
+  Avoids managed paid services (no NAT Gateway, ALB, or RDS) to minimize credit consumption.
+  Note: Actual charges depend on AWS account eligibility, active Free Tier status,
+  credit balance, and public IPv4 address pricing rules.
 
 Parameters:
   InstanceType:
@@ -130,5 +132,5 @@ Outputs:
     Value: !Sub "http://${AtlasInstance.PublicIp}:8091"
 
   FreeTierComplianceNotice:
-    Description: Free tier guarantee
-    Value: "Strictly within 750h/mo t2/t3.micro and 20GB gp3 EBS storage. Never incurs costs."
+    Description: AWS Free Tier and billing eligibility note
+    Value: "Uses 1x t2/t3.micro and 20GB gp3 EBS. Charges may apply beyond Free Tier limits/credits or for public IPv4 addresses depending on account plan; delete stack when not in use."

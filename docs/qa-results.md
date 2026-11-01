@@ -42,3 +42,15 @@ The first browser load was blank due to an unbalanced parenthesis in `app.js` ev
 - Isolated SQLite-backed browser walkthrough passed initial render, switching to an empty collection, creating a note in that collection, persistence after reload, starring and star persistence, and search narrowing to one result. Temporary test data and database were removed.
 - Server log included a missing `/favicon.ico` response (404); this does not affect core app behavior and is not an MVP criterion.
 - Verification was performed by the same development session, not an independent reviewer. The GitHub issue #22 contains this QA PASS and was closed after the fix was committed.
+
+## Assignment 2: Containerisation, PostgreSQL Migration, Playwright E2E Suite & CI/CD (2026-11-02)
+- **Backend & SQLite -> PostgreSQL Migration (`backend/tests/test_repository.py` + CI `test-backend`):**
+  - 10/10 unit and integration tests passed (`python -m unittest discover -s backend/tests -v`).
+  - Migration verification populates custom observations (`"Migrated canal telemetry"` in `c2`, `"Steppe windbreak survey"` in `c3`) and mutates seed observation `#2` (`starred=True`) in SQLite, runs `scripts/migrate_sqlite_to_postgres.py` into PostgreSQL 16 (`postgres:16-alpine`), and asserts via both `SQLAlchemyRepository` and FastAPI `TestClient` (`GET /api/atlas`) that all custom rows, tags, coordinates, mutated seed states, and collection counts (`observationCount`) are preserved with zero duplicate seed rows.
+- **Playwright End-to-End Browser Suite (`tests/e2e/test_01` through `test_10`, GitHub Issues `#40`–`#49`):**
+  - 10/10 Playwright test specs (10 test functions) passed headlessly in Chromium (`pytest tests/e2e/ -v`) against both SQLite and PostgreSQL 16 (`FIELDNOTE_DB_URL=postgresql://fieldnote:fieldnote@localhost:5432/fieldnote_atlas`).
+  - Asserted: (1) Editorial shell & collection switching, (2) Map pin selection & detail panel update, (3) Title/body/tag search & empty state, (4) Filter cycling (`All notes`, `Starred`, `Interviews`), (5) Modal cancellation & fieldnote creation (`6 -> 7` pins), (6) Star toggle toast & reload persistence, (7) Tag chip filter navigation, (8) Connected evidence navigation (`#connected`), (9) JSON archive download (`fieldnote-atlas.json`), and (10) Full UI + REST API (`GET /api/health`, `GET /api/atlas`, `POST /api/observations`, `DELETE /api/observations/{id}`) persistence lifecycle.
+- **Docker Compose & Automated CI/CD Redeployment (`.github/workflows/ci-cd.yml`):**
+  - `test-docker-compose` job builds `Dockerfile`, starts `docker-compose.yml` (`web` + `postgres:16-alpine`), and verifies HTTP health, seeded atlas retrieval, and `POST /api/observations` persistence.
+  - `deploy` job automatically pushes `ghcr.io/sabyrzhan01/fieldnote-atlas:latest` and redeploys the live web application to GitHub Pages (`https://sabyrzhan01.github.io/fieldnote-atlas/`) on every push to `main`.
+  - All 17 Assignment 2 GitHub Issues (`#33`–`#49`) documented with QA & CI verification comments and closed upon verification.

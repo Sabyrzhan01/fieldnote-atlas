@@ -1,17 +1,33 @@
-# Deploying Fieldnote Atlas to Railway with Docker Compose
+# Deploying Fieldnote Atlas to Railway (Recommended Docker Compose Target)
 
-Railway natively runs multi-service container stacks and Dockerfiles with automatic managed PostgreSQL provisioning.
-
----
-
-## Architecture on Railway
-- **Web Service:** Built from `Dockerfile` defined in `railway.json`.
-- **Database:** Railway Postgres Plugin providing persistent cloud PostgreSQL.
-- **Port Handling:** Railway sets `$PORT` dynamically; our application listens on `$PORT` seamlessly.
+Among Railway, Render, and Vercel, **Railway is the primary platform that supports importing a `docker-compose.yml` file directly** into its canvas to provision both the containerized FastAPI web service and the `postgres:16-alpine` service together (see [Railway Docker & Compose documentation](https://docs.railway.com/builds/dockerfiles)).
 
 ---
 
-## Step-by-Step Instructions
+## Why Railway Fits the Docker Compose Requirement
+- **Native Compose Import:** Railway allows dragging and dropping or importing `docker-compose.yml` directly into a project canvas, automatically creating linked services (`web` and `db`) and persistent volumes (`pgdata`).
+- **Single-Dockerfile Support:** Alternatively, Railway can build the `Dockerfile` via `railway.json` and link to a Railway PostgreSQL service.
+- **Port Handling:** Railway injects `$PORT` dynamically (`server.py` reads `PORT` with fallback to `8091`).
+
+---
+
+## Step-by-Step Instructions (Option A: Direct `docker-compose.yml` Import)
+
+1. **Log in to Railway:**
+   - Go to [railway.app](https://railway.app/) and sign in with your GitHub account.
+
+2. **Import `docker-compose.yml`:**
+   - Click **New Project** → **Empty Project** (or press `⌘K` / `Ctrl+K` on the canvas and select **Import Docker Compose**).
+   - Upload or paste the repository's `docker-compose.yml` file, or connect the `Sabyrzhan01/fieldnote-atlas` GitHub repository so `web` builds directly from the repo root.
+   - Railway creates both the `web` service and the `db` (`postgres:16-alpine`) service along with the `pgdata` volume.
+
+3. **Generate Public Domain:**
+   - Click the `web` service card → **Settings** → **Networking** → **Generate Domain** (target port `8091`).
+   - Your stack is live at `https://<generated-domain>.up.railway.app` and automatically redeploys on commits to `main` when linked to the GitHub repo!
+
+---
+
+## Step-by-Step Instructions (Option B: GitHub Repo + Managed Railway PostgreSQL)
 
 1. **Log in to Railway:**
    - Go to [railway.app](https://railway.app/) and authenticate with your GitHub account.

@@ -1,6 +1,6 @@
-# Deploying Fieldnote Atlas to Vercel
+# Deploying Fieldnote Atlas to Vercel (Non-Compose Edge/Serverless Caveat)
 
-Vercel excels at hosting edge static frontends and routing backend API calls via `vercel.json` rewrites to containerized backend services (such as Render or Railway).
+> **Platform Distinction Note:** As documented in [Vercel's Docker Compose guidance](https://vercel.com/i/can-you-run-docker-compose-on-vercel), **Vercel cannot run `docker-compose.yml` or host stateful long-running Docker/PostgreSQL containers**. Vercel is a serverless/edge platform that requires its own service configuration (`vercel.json`) and an external database/backend. Therefore, `vercel.json` is provided here only as an optional edge frontend + `/api/*` rewrite proxy to a containerized backend hosted on Railway, Render, AWS, or GCP. For true Docker Compose deployment, use **Railway** ([guide](railway.md)) or the **AWS/GCP VM** stacks.
 
 ---
 

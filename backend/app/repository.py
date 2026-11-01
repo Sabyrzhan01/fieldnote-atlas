@@ -27,7 +27,7 @@ class MemoryRepository:
 
 class SQLAlchemyRepository:
     """SQLAlchemy-backed repository supporting SQLite and PostgreSQL."""
-    def __init__(self,url: str):
+    def __init__(self, url: str, seed_if_empty: bool = True):
         from sqlalchemy import create_engine, String, Text, Boolean, ForeignKey, JSON, Float
         from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
         
@@ -74,13 +74,14 @@ class SQLAlchemyRepository:
         self.O = ObservationRow
         self.url = url
         
-        with self.Session() as s:
-            if not s.get(CollectionRow, 'c1'):
-                for c in COLLECTIONS:
-                    s.add(CollectionRow(**c))
-                for item in seeded():
-                    s.add(ObservationRow(**item))
-                s.commit()
+        if seed_if_empty:
+            with self.Session() as s:
+                if not s.get(CollectionRow, 'c1'):
+                    for c in COLLECTIONS:
+                        s.add(CollectionRow(**c))
+                    for item in seeded():
+                        s.add(ObservationRow(**item))
+                    s.commit()
                 
     def list_atlas(self):
         from sqlalchemy import select

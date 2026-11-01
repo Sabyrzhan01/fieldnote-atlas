@@ -1,5 +1,6 @@
 import unittest, sys, pathlib, tempfile, os
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
 from app.repository import MemoryRepository, SQLiteRepository, SQLAlchemyRepository, PostgresRepository, make_repository
 from scripts.migrate_sqlite_to_postgres import migrate
 
@@ -62,19 +63,48 @@ class SQLiteRepositoryTests(unittest.TestCase):
     def test_database_migration_tool(self):
         with tempfile.TemporaryDirectory() as directory:
             src_url = f"sqlite:///{directory}/src.db"
-            dst_url = f"sqlite:///{directory}/dst.db"
+            dst_url = os.environ.get("TEST_POSTGRES_URL") or f"sqlite:///{directory}/dst.db"
             src_repo = SQLiteRepository(src_url)
-            src_repo.create({'collection_id':'c1','title':'Migrated note','body':'Testing migration','kind':'Field note','place':'Almaty','region':'KZ','date':'Today','color':'#d87551','tags':['migrated'],'source':'Test','starred':True,'x':45.0,'y':55.0})
-            
+            # 1. Add a custom observation in collection c2 with custom coordinates and tags
+            src_repo.create({
+                'collection_id': 'c2',
+                'title': 'Migrated canal telemetry',
+                'body': 'Testing SQLite to PostgreSQL migration fidelity with custom records',
+                'kind': 'Field note',
+                'place': 'Esentai River',
+                'region': 'Almaty, KZ',
+                'date': 'Today',
+                'color': '#73937c',
+                'tags': ['migrated', 'hydrology'],
+                'source': 'Sensor log',
+                'starred': True,
+                'x': 45.0,
+                'y': 55.0
+            })
+            # 2. Toggle star state on seeded observation #2 (originally unstarred)
+            src_repo.toggle_star('2')
+
             result = migrate(src_url, dst_url)
-            self.assertGreaterEqual(result['target_collections'], 3)
-            self.assertGreaterEqual(result['target_observations'], 7)
-            
-            dst_repo = SQLiteRepository(dst_url)
+            self.assertEqual(result['target_collections'], 3)
+            self.assertEqual(result['target_observations'], 7)
+
+            dst_repo = SQLAlchemyRepository(dst_url)
             dst_atlas = dst_repo.list_atlas()
-            migrated_note = next(o for o in dst_atlas['observations'] if o['title'] == 'Migrated note')
+            migrated_note = next(o for o in dst_atlas['observations'] if o['title'] == 'Migrated canal telemetry')
+            self.assertEqual(migrated_note['collection_id'], 'c2')
+            self.assertEqual(migrated_note['place'], 'Esentai River')
+            self.assertEqual(migrated_note['tags'], ['migrated', 'hydrology'])
             self.assertTrue(migrated_note['starred'])
             self.assertEqual(migrated_note['x'], 45.0)
+            self.assertEqual(migrated_note['y'], 55.0)
+
+            # Verify mutated seed observation #2 preserved its toggled star state
+            seed_two = next(o for o in dst_atlas['observations'] if o['id'] == '2')
+            self.assertTrue(seed_two['starred'])
+
+            counts = {c['id']: c['observationCount'] for c in dst_atlas['collections']}
+            self.assertEqual(counts['c1'], 6)
+            self.assertEqual(counts['c2'], 1)
 
     def test_make_repository_env_detection(self):
         orig_url = os.environ.get('DATABASE_URL')

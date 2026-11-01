@@ -1,6 +1,6 @@
-# Deploying Fieldnote Atlas to Render with Docker Compose / Blueprint
+# Deploying Fieldnote Atlas to Render (Blueprint Alternative to Docker Compose)
 
-Render supports direct deployment of containerized web services and managed PostgreSQL databases using Render Blueprints (`render.yaml`).
+> **Platform Distinction Note:** Render does **not** execute `docker-compose.yml` directly in production. Instead, per [Render's Docker documentation](https://render.com/docs/docker), multi-service setups on Render use a declarative **Render Blueprint (`render.yaml`)** that provisions the `Dockerfile` web service and a separate managed Render PostgreSQL database (`fieldnote-atlas-db`), injecting `DATABASE_URL` automatically. For direct `docker-compose.yml` import, see the [Railway deployment guide](railway.md) or the [AWS CloudFormation](../../aws/README.md) / [GCP Terraform](../../terraform/README.md) VM guides.
 
 ---
 
