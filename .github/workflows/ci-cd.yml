@@ -63,7 +63,6 @@ jobs:
           import os, tempfile, subprocess, sys
           from fastapi.testclient import TestClient
           from backend.app.repository import SQLiteRepository
-          from backend.app.main import create_app
 
           with tempfile.TemporaryDirectory() as tmp:
               sqlite_url = f"sqlite:///{tmp}/custom_source.sqlite3"
@@ -92,7 +91,8 @@ jobs:
               )
               # 3. Boot FastAPI against PostgreSQL 16 and verify via HTTP API
               os.environ["DATABASE_URL"] = pg_url
-              client = TestClient(create_app())
+              from backend.app.main import app
+              client = TestClient(app)
               resp = client.get("/api/atlas")
               assert resp.status_code == 200, resp.text
               payload = resp.json()
