@@ -1,37 +1,41 @@
 services:
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: fieldnote-atlas-web
-    restart: unless-stopped
-    ports:
-      - "8091:8091"
-    environment:
-      - DATABASE_URL=postgresql://fieldnote:fieldnote@db:5432/fieldnote_atlas
-      - PORT=8091
-      - HOST=0.0.0.0
-    depends_on:
-      db:
-        condition: service_healthy
-
   db:
     image: postgres:16-alpine
-    container_name: fieldnote-atlas-db
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=fieldnote
-      - POSTGRES_PASSWORD=fieldnote
-      - POSTGRES_DB=fieldnote_atlas
+      POSTGRES_USER: ${POSTGRES_USER:-fieldnote}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fieldnote}
+      POSTGRES_DB: ${POSTGRES_DB:-fieldnote_atlas}
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fieldnote -d fieldnote_atlas"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fieldnote} -d ${POSTGRES_DB:-fieldnote_atlas}"]
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 5s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      PORT: "8000"
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://fieldnote:fieldnote@db:5432/fieldnote_atlas}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
-  postgres_data:
+  pgdata:

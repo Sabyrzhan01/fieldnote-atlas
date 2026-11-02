@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fieldnote
+      POSTGRES_PASSWORD: fieldnote
+      POSTGRES_DB: fieldnote_atlas_test
+    ports:
+      - "5432:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fieldnote -d fieldnote_atlas_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: "8000"
+      DATABASE_URL: postgresql+psycopg://fieldnote:fieldnote@db:5432/fieldnote_atlas_test
+      ENABLE_TEST_RESET: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/api/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
