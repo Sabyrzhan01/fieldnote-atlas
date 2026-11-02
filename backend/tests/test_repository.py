@@ -1,8 +1,9 @@
 import unittest, sys, pathlib, tempfile, os
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
-from app.repository import MemoryRepository, SQLiteRepository, SQLAlchemyRepository, PostgresRepository, make_repository
+from app.repository import MemoryRepository, SQLiteRepository, SQLAlchemyRepository, PostgresRepository, make_repository, normalize_db_url
 from scripts.migrate_sqlite_to_postgres import migrate
+from scripts.seed_db import seed_database
 
 class RepositoryTests(unittest.TestCase):
     def setUp(self): self.repo=MemoryRepository()
@@ -55,10 +56,41 @@ class SQLiteRepositoryTests(unittest.TestCase):
             self.assertIsNone(repo.delete(created['id']))
 
     def test_postgres_url_normalization(self):
-        # Verify postgres:// is rewritten to postgresql://
+        # Verify postgres:// and postgresql:// are rewritten to postgresql+psycopg://
+        self.assertEqual(
+            normalize_db_url("postgres://user:pass@localhost:5432/atlas"),
+            "postgresql+psycopg://user:pass@localhost:5432/atlas",
+        )
+        self.assertEqual(
+            normalize_db_url("postgresql://user:pass@localhost:5432/atlas"),
+            "postgresql+psycopg://user:pass@localhost:5432/atlas",
+        )
         with tempfile.TemporaryDirectory() as directory:
             dummy_repo = SQLAlchemyRepository(f"sqlite:///{directory}/dummy.db")
             self.assertTrue(dummy_repo.url.startswith("sqlite:///"))
+            dummy_repo.create({
+                'collection_id': 'c1',
+                'title': 'Temporary observation',
+                'body': 'To be reset',
+                'kind': 'Field note',
+                'place': 'Abay',
+                'region': 'Almaty',
+                'date': 'Today',
+                'color': '#d87551',
+                'tags': [],
+                'source': 'Walk',
+                'starred': False,
+            })
+            self.assertEqual(len(dummy_repo.list_atlas()['observations']), 7)
+            reset_atlas = dummy_repo.reset()
+            self.assertEqual(len(reset_atlas['observations']), 6)
+
+    def test_seed_script_idempotent(self):
+        with tempfile.TemporaryDirectory() as directory:
+            url = f"sqlite:///{directory}/seeded.db"
+            res = seed_database(url, force=True)
+            self.assertEqual(res['collections'], 3)
+            self.assertEqual(res['observations'], 6)
 
     def test_database_migration_tool(self):
         with tempfile.TemporaryDirectory() as directory:
