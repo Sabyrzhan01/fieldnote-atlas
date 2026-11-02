@@ -1,0 +1,256 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Fieldnote Atlas — AWS Free-Tier Production Infrastructure (ECS on EC2 t3.micro,
+  Single-AZ RDS PostgreSQL db.t3.micro, ECR, Secrets Manager, Security Groups,
+  and AWS Budget Alert). Zero paid add-ons (No NAT Gateway, No ALB, No Multi-AZ).
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: fieldnote-atlas-prod
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: Default VPC ID (avoids NAT Gateway cost)
+  PublicSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Public Subnet IDs in the Default VPC
+  ECSAMIId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ecs/optimized-ami/amazon-linux-2023/recommended/image_id
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+      - t3.micro
+      - t2.micro
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.micro
+    AllowedValues:
+      - db.t3.micro
+  AlertEmail:
+    Type: String
+    Default: sabyrzhan@example.com
+    Description: Email address for the $5/month AWS Free Tier Budget Alert
+
+Resources:
+  # 1. Cost Control: AWS Budgets Alert ($5.00 USD monthly threshold, alerts at 80%)
+  MonthlyCostBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: !Sub "${EnvironmentName}-free-tier-budget"
+        BudgetLimit:
+          Amount: 5
+          Unit: USD
+        TimeUnit: MONTHLY
+        BudgetType: COST
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 80
+            ThresholdType: PERCENTAGE
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref AlertEmail
+
+  # 2. Container Registry (ECR)
+  AppECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: fieldnote-atlas
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep only last 5 images to stay within 500MB free tier",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
+
+  # 3. Secrets Manager for Database Credentials (No hardcoded secrets)
+  DatabaseSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "${EnvironmentName}/database-credentials"
+      Description: PostgreSQL credentials for Fieldnote Atlas
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "fieldnote"}'
+        GenerateStringKey: "password"
+        PasswordLength: 24
+        ExcludeCharacters: '"@/\'
+
+  # 4. Security Groups (Least Privilege)
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP traffic on port 8000 to Fieldnote Atlas container
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          CidrIp: 0.0.0.0/0
+
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow PostgreSQL 5432 only from AppSecurityGroup
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref AppSecurityGroup
+
+  # 5. Single-AZ Free-Tier PostgreSQL 16 RDS Instance (db.t3.micro, 20GB gp2)
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnets for Fieldnote Atlas RDS PostgreSQL
+      SubnetIds: !Ref PublicSubnetIds
+
+  PostgresDatabase:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Sub "${EnvironmentName}-pg"
+      Engine: postgres
+      EngineVersion: "16.3"
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: 20
+      StorageType: gp2
+      DBName: fieldnote_atlas
+      MasterUsername: "{{resolve:secretsmanager:fieldnote-atlas-prod/database-credentials:SecretString:username}}"
+      MasterUserPassword: "{{resolve:secretsmanager:fieldnote-atlas-prod/database-credentials:SecretString:password}}"
+      MultiAZ: false
+      PubliclyAccessible: false
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      BackupRetentionPeriod: 1
+      DeletionProtection: false
+    DependsOn: DatabaseSecret
+
+  # 6. ECS Cluster + Free-Tier EC2 t3.micro Capacity + Task Definition with Resource Limits
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${EnvironmentName}-cluster"
+
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: ReadDatabaseSecret
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref DatabaseSecret
+
+  EC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref EC2InstanceRole
+
+  ECSHostInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref ECSAMIId
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      SecurityGroupIds:
+        - !Ref AppSecurityGroup
+      SubnetId: !Select [0, !Ref PublicSubnetIds]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+
+  AppTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: fieldnote-atlas
+      NetworkMode: bridge
+      Cpu: "512"
+      Memory: "768"
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+      ContainerDefinitions:
+        - Name: fieldnote-atlas
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/fieldnote-atlas:latest"
+          Cpu: 512
+          Memory: 768
+          MemoryReservation: 512
+          Essential: true
+          PortMappings:
+            - ContainerPort: 8000
+              HostPort: 8000
+              Protocol: tcp
+          Environment:
+            - Name: PORT
+              Value: "8000"
+            - Name: DATABASE_URL
+              Value: !Sub "postgresql+psycopg://fieldnote@${PostgresDatabase.Endpoint.Address}:${PostgresDatabase.Endpoint.Port}/fieldnote_atlas"
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - curl -fsS http://127.0.0.1:8000/api/health || exit 1
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+
+  AppECSService:
+    Type: AWS::ECS::Service
+    DependsOn: ECSHostInstance
+    Properties:
+      Cluster: !Ref ECSCluster
+      ServiceName: fieldnote-atlas-service
+      TaskDefinition: !Ref AppTaskDefinition
+      DesiredCount: 1
+
+Outputs:
+  ECRRepositoryUri:
+    Description: ECR Repository URI for pushing Fieldnote Atlas images
+    Value: !GetAtt AppECRRepository.RepositoryUri
+  AppPublicUrl:
+    Description: Public URL of the Fieldnote Atlas EC2 ECS host on port 8000
+    Value: !Sub "http://${ECSHostInstance.PublicDnsName}:8000"
+  RDSPostgresEndpoint:
+    Description: Single-AZ RDS PostgreSQL endpoint
+    Value: !GetAtt PostgresDatabase.Endpoint.Address
