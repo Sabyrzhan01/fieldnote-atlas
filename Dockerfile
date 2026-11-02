@@ -1,47 +1,49 @@
-# Single container for Fieldnote Atlas: Connected Static Frontend + FastAPI Backend
-FROM python:3.11-slim
+# Stage 1: Build the Frontend SPA with Vite
+FROM node:20-alpine AS frontend-build
+WORKDIR /frontend
+COPY frontend/package.json ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
 
-# Prevent Python from buffering stdout/stderr and writing .pyc files
+# Stage 2: Production Python Runtime serving FastAPI API + Built Frontend SPA
+FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=8091 \
-    HOST=0.0.0.0
+    PYTHONPATH=/app/backend:/app \
+    PORT=8000
 
 WORKDIR /app
 
-# Install system dependencies (curl for healthchecks)
+# Install curl for healthcheck and libpq for psycopg
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python backend dependencies
+# Install Python dependencies
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r backend/requirements.txt
 
-# Copy Backend application
+# Copy backend application, Alembic migrations, seed/migration scripts, and OpenAPI spec
+COPY alembic.ini ./alembic.ini
 COPY backend/ ./backend/
-COPY server.py ./
-COPY openapi.yaml ./
+COPY scripts/ ./scripts/
+COPY openapi.yaml ./openapi.yaml
 
-# Copy Static Frontend assets (served by FastAPI static mount at '/')
-COPY index.html ./
-COPY app.js ./
-COPY style.css ./
-COPY services.js ./
-COPY docs/ ./docs/
+# Copy built frontend static assets from Stage 1
+COPY --from=frontend-build /frontend/dist ./frontend/dist
 
-# Create non-privileged user for security
-RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser && \
+# Run as a non-root user
+RUN useradd --create-home --shell /bin/bash appuser && \
     chown -R appuser:appuser /app
-
 USER appuser
 
-EXPOSE 8091
+EXPOSE 8000
 
-# Container healthcheck
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://127.0.0.1:${PORT}/api/health || exit 1
+    CMD sh -c "curl -fsS http://127.0.0.1:${PORT:-8000}/api/health || exit 1"
 
-# Launch FastAPI server (respects $PORT and $HOST)
-CMD ["python3", "server.py"]
+# Run Alembic migrations + seed when DATABASE_URL is configured, then launch FastAPI on $PORT
+CMD ["sh", "-c", "if [ -n \"$DATABASE_URL\" ]; then alembic upgrade head && python -m scripts.seed_db; fi && exec uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
