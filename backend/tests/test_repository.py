@@ -18,6 +18,8 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(created['title'],'Test note')
         toggled=self.repo.toggle_star(created['id'])
         self.assertTrue(next(o for o in toggled['observations'] if o['id']==created['id'])['starred'])
+        updated=self.repo.update(created['id'], {**item, 'title': 'Edited note'})
+        self.assertEqual(next(o for o in updated['observations'] if o['id']==created['id'])['title'], 'Edited note')
     def test_create_observation_preserves_selected_collection(self):
         item={'collection_id':'c2','title':'Pipe hum','body':'A low pulse at dusk','kind':'Field note','place':'Test place','region':'Almaty','date':'Today','color':'#73937c','tags':[],'source':'Walk','starred':False}
         atlas=self.repo.create(item); created=atlas['observations'][0]
