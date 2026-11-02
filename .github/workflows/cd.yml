@@ -5,8 +5,6 @@ on:
     workflows: ["CI"]
     types: [completed]
     branches: ["main"]
-  push:
-    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -23,13 +21,15 @@ jobs:
   publish-and-deploy:
     name: Publish Container to GHCR & Redeploy Live Environments
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout repository
+      - name: Checkout verified commit from CI
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up Node.js 20 and build Frontend SPA
         uses: actions/setup-node@v4
@@ -50,7 +50,7 @@ jobs:
         with:
           path: frontend/dist
 
-      - name: Deploy Frontend to Live GitHub Pages URL
+      - name: Deploy Frontend Preview to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
@@ -71,7 +71,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/sabyrzhan01/fieldnote-atlas:latest
-            ghcr.io/sabyrzhan01/fieldnote-atlas:${{ github.sha }}
+            ghcr.io/sabyrzhan01/fieldnote-atlas:${{ github.event.workflow_run.head_sha || github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

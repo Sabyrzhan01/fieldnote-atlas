@@ -5,8 +5,9 @@
 
 **Fieldnote Atlas** is a warm editorial urban research and spatial notes platform for organizing field observations, oral interviews, architectural artifacts, and street-level signals on an interactive Almaty map.
 
-- **Live Deployed Application**: **[https://sabyrzhan01.github.io/fieldnote-atlas/](https://sabyrzhan01.github.io/fieldnote-atlas/)**
-- **Container Image (GHCR)**: `ghcr.io/sabyrzhan01/fieldnote-atlas:latest`
+- **Full-Stack Container Image (GHCR)**: `ghcr.io/sabyrzhan01/fieldnote-atlas:latest` (FastAPI + Vite SPA + Alembic PostgreSQL migrations on `:8000`)
+- **Full-Stack PaaS Blueprints**: [`render.yaml`](./render.yaml) (Render Docker Web Service + Managed PostgreSQL) & [`railway.json`](./railway.json) / [`docker-compose.yml`](./docker-compose.yml) (Railway)
+- **Static UI Preview (GitHub Pages — client-side mock mode only)**: **[https://sabyrzhan01.github.io/fieldnote-atlas/](https://sabyrzhan01.github.io/fieldnote-atlas/)**
 - **GitHub Issues Tracker**: **[https://github.com/Sabyrzhan01/fieldnote-atlas/issues](https://github.com/Sabyrzhan01/fieldnote-atlas/issues)**
 
 ---
@@ -135,12 +136,24 @@ Each E2E feature has its own dedicated spec file and GitHub Issue:
 
 ---
 
-## 5. CI/CD & Deployment (Stages 5, 6 & 7)
+## 5. CI/CD & Full-Stack Deployment (Stages 5, 6 & 7)
 
-- **Continuous Integration (`.github/workflows/ci.yml`)**: Runs on every `push` and `pull_request` with 5 jobs (`frontend-test`, `backend-test` with `postgres:16-alpine`, `integration`, `e2e` uploading the `playwright-e2e-report` artifact, and `docker-build`).
-- **Continuous Deployment (`.github/workflows/cd.yml`)**: Automatically triggers on a green `CI` run on `main`, publishing the multi-stage Docker image to `ghcr.io/sabyrzhan01/fieldnote-atlas:latest`, deploying the built SPA to **[https://sabyrzhan01.github.io/fieldnote-atlas/](https://sabyrzhan01.github.io/fieldnote-atlas/)**, and triggering Render/Railway/OIDC cloud deployments.
-- **PaaS Blueprints**: [`render.yaml`](./render.yaml) and [`railway.json`](./railway.json).
-- **Cloud IaC**: See [`infra/README.md`](./infra/README.md) for AWS CloudFormation (`infra/aws/template.yaml`) and GCP Terraform (`infra/gcp/*.tf`) instructions, `$5/month` budget alerts, and teardown commands.
+- **Continuous Integration ([`.github/workflows/ci.yml`](./.github/workflows/ci.yml))**: Triggered on every `push` and `pull_request` with 5 jobs:
+  1. `frontend-test`: Vitest unit tests + Vite production build (`frontend/dist`)
+  2. `backend-test`: Alembic migration + seed script + Pytest repository & SQLite-to-PostgreSQL migration suite against `postgres:16-alpine`
+  3. `integration`: Live FastAPI + PostgreSQL 16 HTTP integration verification (`/api/health`, `/api/atlas`, `/api/test/reset`)
+  4. `e2e`: Full Docker Compose stack (`docker-compose.test.yml`) + 11 Playwright E2E spec files + `playwright-e2e-report` artifact upload
+  5. `docker-build`: Multi-stage `Dockerfile` build with BuildKit cache + non-root `appuser` and `/api/health` smoke test
+- **Continuous Deployment ([`.github/workflows/cd.yml`](./.github/workflows/cd.yml))**: Triggered **strictly after** a successful `CI` workflow run on `main` (`workflow_run` with `conclusion == 'success'`). Publishes `ghcr.io/sabyrzhan01/fieldnote-atlas:latest`, updates the GitHub Pages static UI preview, and triggers Render/Railway deploy webhooks (`RENDER_DEPLOY_HOOK_URL` / `RAILWAY_WEBHOOK_URL`).
+- **Full-Stack PaaS Deployment (Render or Railway)**:
+  - **Render Blueprint ([`render.yaml`](./render.yaml) — [guide](./docs/deployment/render.md))**:
+    1. In [Render Dashboard](https://dashboard.render.com/), click **New + → Blueprint** and select `Sabyrzhan01/fieldnote-atlas`.
+    2. Render provisions the Docker web service (`fieldnote-atlas` on `PORT=8000`, `healthCheckPath: /api/health`) and free PostgreSQL database (`fieldnote-atlas-db`), injecting `DATABASE_URL` automatically.
+    3. Optional: Add the Render Deploy Hook URL to GitHub Repository Secrets as `RENDER_DEPLOY_HOOK_URL`.
+  - **Railway ([`railway.json`](./railway.json) & [`docker-compose.yml`](./docker-compose.yml) — [guide](./docs/deployment/railway.md))**:
+    1. In [Railway](https://railway.app/), click **New Project → Import Docker Compose** (upload `docker-compose.yml`) or **Deploy from GitHub repo** (`Sabyrzhan01/fieldnote-atlas`) + **Add PostgreSQL** (`DATABASE_URL`).
+    2. Generate a public domain on port `8000` and verify `/api/health` (`{"status":"ok"}`) and `/api/atlas`.
+- **Cloud IaC ([`infra/README.md`](./infra/README.md))**: Free-tier AWS CloudFormation ([`infra/aws/template.yaml`](./infra/aws/template.yaml)) and GCP Terraform ([`infra/gcp/`](./infra/gcp/)) with `$5/month` budget alerts and teardown instructions.
 
 ---
 

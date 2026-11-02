@@ -5,6 +5,7 @@
     "dockerfilePath": "Dockerfile"
   },
   "deploy": {
+    "startCommand": "sh -c 'if [ -n \"$DATABASE_URL\" ]; then alembic upgrade head && python -m scripts.seed_db; fi && exec uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}'",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 60,
     "restartPolicyType": "ON_FAILURE",

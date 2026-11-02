@@ -131,8 +131,8 @@ Resources:
       AllocatedStorage: 20
       StorageType: gp2
       DBName: fieldnote_atlas
-      MasterUsername: "{{resolve:secretsmanager:fieldnote-atlas-prod/database-credentials:SecretString:username}}"
-      MasterUserPassword: "{{resolve:secretsmanager:fieldnote-atlas-prod/database-credentials:SecretString:password}}"
+      MasterUsername: !Sub "{{resolve:secretsmanager:${DatabaseSecret}:SecretString:username}}"
+      MasterUserPassword: !Sub "{{resolve:secretsmanager:${DatabaseSecret}:SecretString:password}}"
       MultiAZ: false
       PubliclyAccessible: false
       VPCSecurityGroups:
@@ -226,7 +226,7 @@ Resources:
             - Name: PORT
               Value: "8000"
             - Name: DATABASE_URL
-              Value: !Sub "postgresql+psycopg://fieldnote@${PostgresDatabase.Endpoint.Address}:${PostgresDatabase.Endpoint.Port}/fieldnote_atlas"
+              Value: !Sub "postgresql+psycopg://{{resolve:secretsmanager:${DatabaseSecret}:SecretString:username}}:{{resolve:secretsmanager:${DatabaseSecret}:SecretString:password}}@${PostgresDatabase.Endpoint.Address}:${PostgresDatabase.Endpoint.Port}/fieldnote_atlas"
           HealthCheck:
             Command:
               - CMD-SHELL
