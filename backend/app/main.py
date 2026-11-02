@@ -42,6 +42,14 @@ def toggle_star(observation_id: str):
     return result
 
 
+@app.put('/api/observations/{observation_id}', response_model=AtlasData)
+def update_observation(observation_id: str, payload: ObservationInput):
+    result = repository.update(observation_id, payload)
+    if result is None:
+        raise HTTPException(status_code=404, detail='Observation not found')
+    return result
+
+
 @app.delete('/api/observations/{observation_id}', response_model=AtlasData)
 def delete_observation(observation_id: str):
     result = repository.delete(observation_id)

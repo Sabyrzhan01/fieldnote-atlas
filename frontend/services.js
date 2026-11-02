@@ -25,6 +25,11 @@ export function createMockService({ storage = globalThis.localStorage, seedObser
       write(current);
       return atlas(current);
     },
+    async updateObservation(id, input) {
+      const current = read().map((item) => item.id === id ? { ...item, ...input, id } : item);
+      write(current);
+      return atlas(current);
+    },
     async deleteObservation(id) {
       const current = read().filter((item) => item.id !== id);
       write(current);
@@ -42,6 +47,7 @@ export function createApiService(fetchImpl = globalThis.fetch, base = '/api') {
   return {
     getAtlas: () => request('/atlas'),
     createObservation: (item) => request('/observations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) }),
+    updateObservation: (id, item) => request(`/observations/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item) }),
     toggleStar: (id) => request(`/observations/${encodeURIComponent(id)}/star`, { method: 'POST' }),
     deleteObservation: (id) => request(`/observations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   };

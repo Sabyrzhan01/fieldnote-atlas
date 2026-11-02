@@ -35,6 +35,8 @@ describe('Fieldnote Atlas Frontend Services', () => {
     const service = createMockService({ storage: new MemoryStorage(), seedObservations: seed, collections });
     const starred = await service.toggleStar('one');
     expect(starred.observations.find((x) => x.id === 'one').starred).toBe(true);
+    const updated = await service.updateObservation('one', { title: 'Updated rain path' });
+    expect(updated.observations.find((x) => x.id === 'one').title).toBe('Updated rain path');
     const deleted = await service.deleteObservation('one');
     expect(deleted.observations.map((x) => x.id)).toEqual(['two']);
     expect(deleted.collections.map((c) => c.observationCount)).toEqual([0, 1]);

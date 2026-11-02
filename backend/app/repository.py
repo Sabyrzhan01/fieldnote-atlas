@@ -73,6 +73,16 @@ class MemoryRepository:
                 return self.list_atlas()
         return None
 
+    def update(self, item_id, item):
+        patch = item.model_dump() if hasattr(item, 'model_dump') else dict(item)
+        for row in self.observations:
+            if row['id'] == item_id:
+                for k, v in patch.items():
+                    if k != 'id' and v is not None:
+                        row[k] = v
+                return self.list_atlas()
+        return None
+
     def delete(self, item_id):
         before = len(self.observations)
         self.observations = [o for o in self.observations if o['id'] != item_id]
@@ -174,6 +184,19 @@ class SQLAlchemyRepository:
             if o is None:
                 return None
             o.starred = not o.starred
+            s.commit()
+        return self.list_atlas()
+
+    def update(self, item_id, item):
+        from .schemas import ObservationInput
+        patch = item.model_dump() if isinstance(item, ObservationInput) else dict(item)
+        with self.Session() as s:
+            o = s.get(self.O, item_id)
+            if o is None:
+                return None
+            for field in ('collection_id', 'title', 'body', 'kind', 'place', 'region', 'date', 'color', 'tags', 'source', 'starred', 'x', 'y'):
+                if field in patch and patch[field] is not None:
+                    setattr(o, field, patch[field])
             s.commit()
         return self.list_atlas()
 
