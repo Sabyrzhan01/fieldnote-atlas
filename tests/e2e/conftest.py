@@ -31,11 +31,12 @@ def app_server():
         env["FIELDNOTE_DB_URL"] = f"sqlite:///{test_db}"
     env["HOST"] = host
     env["PORT"] = str(port)
+    env["ENABLE_TEST_RESET"] = "1"
     env["PYTHONUNBUFFERED"] = "1"
 
     python_bin = sys.executable
     server_proc = subprocess.Popen(
-        [python_bin, str(PROJECT_ROOT / "server.py")],
+        [python_bin, "-m", "uvicorn", "backend.app.main:app", "--host", host, "--port", str(port)],
         cwd=str(PROJECT_ROOT),
         env=env,
         stdout=subprocess.PIPE,
