@@ -86,18 +86,62 @@ def collect(env):
         ]
     return {"metrics": metrics, "logs": log_events, "traces": trace_summaries}
 
+def maybe_publish_github_issue(report):
+    if os.getenv("CREATE_GITHUB_ISSUES") != "1":
+        return None
+    token = os.getenv("GITHUB_TOKEN")
+    repo = os.getenv("GITHUB_REPOSITORY")
+    if not token or not repo:
+        return None
+    alert = report.get("alert", {})
+    labels = alert.get("labels", {})
+    title = f"[Advisory Incident] {labels.get('alertname', 'Alert')} ({labels.get('deployment_environment_name', 'unknown')})"
+    body = (
+        "## Advisory On-Call Incident Report\\n\\n"
+        f"- **Status:** {alert.get('status', 'unknown')}\\n"
+        f"- **Environment:** {labels.get('deployment_environment_name', 'unknown')}\\n"
+        f"- **Severity:** {labels.get('severity', 'unknown')}\\n\\n"
+        "### Analysis\\n```json\\n"
+        + json.dumps(report.get("analysis", {}), indent=2)
+        + "\\n```\\n\\n> Strictly advisory report; no automated production changes were performed.\\n"
+    )
+    try:
+        resp = httpx.post(
+            f"https://api.github.com/repos/{repo}/issues",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/vnd.github+json",
+            },
+            json={"title": title, "body": body, "labels": ["incident", "advisory"]},
+            timeout=10,
+        )
+        if resp.is_success:
+            return resp.json().get("html_url")
+    except httpx.HTTPError:
+        return None
+    return None
+
 
 def analyze(report):
-    secret = os.getenv("OPENAI_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    github_token = os.getenv("GITHUB_TOKEN")
+    secret = openai_key or github_token
     if not secret:
         return {"status": "missing_api_key"}
+    if openai_key:
+        base_url = (os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1").rstrip("/")
+        model = os.getenv("OPENAI_MODEL") or "gpt-4.1-mini"
+    else:
+        base_url = (os.getenv("OPENAI_BASE_URL") or "https://models.inference.ai.azure.com").rstrip("/")
+        model = os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
     try:
         response = httpx.post(
-            "https://api.openai.com/v1/chat/completions",
+            f"{base_url}/chat/completions",
             headers={"Authorization": f"Bearer {secret}"},
             json={
-                "model": os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
+                "model": model,
                 "response_format": {"type": "json_object"},
+                
                 "max_completion_tokens": 800,
                 "messages": [
                     {"role": "system", "content": (
@@ -142,6 +186,10 @@ def receive(notification: Notification, authorization: str = Header(default=""))
                 "evidence": collect(env) if alert.status == "firing" else {},
             }
             report["analysis"] = analyze(report) if alert.status == "firing" else {"status": "resolved"}
+            if alert.status == "firing":
+                issue_url = maybe_publish_github_issue(report)
+                if issue_url:
+                    report["github_issue_url"] = issue_url
             db.execute("INSERT OR IGNORE INTO incidents VALUES (?, ?)", (event_id, json.dumps(report)))
             db.commit()
     return {"received": len(notification.alerts)}
