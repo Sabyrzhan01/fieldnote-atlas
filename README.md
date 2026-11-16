@@ -1,7 +1,7 @@
 # Fieldnote Atlas
 
-[![CI](https://github.com/Sabyrzhan01/fieldnote-atlas/actions/workflows/ci.yml/badge.svg)](https://github.com/Sabyrzhan01/fieldnote-atlas/actions/workflows/ci.yml)
-[![Promote tested release](https://github.com/Sabyrzhan01/fieldnote-atlas/actions/workflows/promote.yml/badge.svg)](https://github.com/Sabyrzhan01/fieldnote-atlas/actions/workflows/promote.yml)
+[![CI](https://github.com/Sabyrzhan01/fieldnote-atlas/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Sabyrzhan01/fieldnote-atlas/actions/workflows/ci.yml)
+[![CD](https://github.com/Sabyrzhan01/fieldnote-atlas/actions/workflows/cd.yml/badge.svg)](https://github.com/Sabyrzhan01/fieldnote-atlas/actions/workflows/cd.yml)
 
 **Fieldnote Atlas** is a warm editorial urban research and spatial notes platform for organizing field observations, oral interviews, architectural artifacts, and street-level signals on an interactive Almaty map.
 

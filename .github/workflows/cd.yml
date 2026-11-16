@@ -1,0 +1,68 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.release.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: release
+        env:
+          VERIFIED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:$(date -u +%Y%m%d-%H%M%S)-${VERIFIED_SHA:0:7}"
+          docker build -t "$image" .
+          docker run -d --name candidate -p 8000:8000 "$image"
+          curl --fail --retry 20 --retry-delay 1 --retry-all-errors http://localhost:8000/api/health
+          docker push "$image"
+          docker inspect --format 'image={{index .RepoDigests 0}}' "$image" >> "$GITHUB_OUTPUT"
+
+  development:
+    needs: publish
+    runs-on: [self-hosted, atlas-deploy]
+    environment: development
+    permissions:
+      contents: read
+      packages: read
+    concurrency:
+      group: atlas-development
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - env:
+          IMAGE: ${{ needs.publish.outputs.image }}
+        run: |
+          set -euo pipefail
+          ./deploy/release.sh development "$IMAGE"
+          echo "Verified development image digest: \`$IMAGE\`" >> "$GITHUB_STEP_SUMMARY"
+

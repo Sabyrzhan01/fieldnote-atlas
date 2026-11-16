@@ -231,61 +231,6 @@ jobs:
           test "$WHOAMI" = "appuser"
           docker rm -f fieldnote-smoke
 
-  publish:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [integration, e2e, docker-build, compose-drill]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    outputs:
-      image: ${{ steps.release.outputs.image }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - id: release
-        run: |
-          image="ghcr.io/${GITHUB_REPOSITORY,,}:$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA:0:7}"
-          docker build -t "$image" .
-          docker run -d --name candidate -p 8000:8000 "$image"
-          curl --fail --retry 20 --retry-delay 1 --retry-all-errors http://localhost:8000/api/health
-          docker push "$image"
-          docker inspect --format 'image={{index .RepoDigests 0}}' "$image" >> "$GITHUB_OUTPUT"
-
-  development:
-    needs: publish
-    runs-on: ${{ vars.SELF_HOSTED_RUNNER == '1' && fromJSON('["self-hosted", "atlas-deploy"]') || 'ubuntu-latest' }}
-    environment: development
-    permissions:
-      contents: read
-      packages: read
-    concurrency:
-      group: atlas-development
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - env:
-          IMAGE: ${{ needs.publish.outputs.image }}
-          ATLAS_DEPLOY_HOME: /tmp/atlas-deploy
-        run: |
-          set -euo pipefail
-          state=${ATLAS_DEPLOY_HOME:-"$HOME/.config/fieldnote-atlas"}/development
-          mkdir -p "$state"
-          if [ ! -f "$state/host.env" ]; then
-            printf 'APP_PORT=8000\nDB_PASSWORD=%s\n' "$(openssl rand -hex 32)" > "$state/host.env"
-          fi
-          docker network inspect atlas-monitoring >/dev/null 2>&1 || docker network create atlas-monitoring
-          ./deploy/release.sh development "$IMAGE"
-          echo "Verified development image digest: \`$IMAGE\`" >> "$GITHUB_STEP_SUMMARY"
-
   compose-drill:
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
