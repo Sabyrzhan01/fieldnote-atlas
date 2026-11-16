@@ -9,7 +9,8 @@ on:
 
 permissions:
   contents: read
-
+  models: read
+  
 jobs:
   frontend-test:
     name: Frontend Unit Tests & Build (Vitest + Vite)
@@ -273,7 +274,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - env:
           IMAGE: ${{ needs.publish.outputs.image }}
-        run: ./deploy/release.sh development "$IMAGE"
+          ATLAS_DEPLOY_HOME: /tmp/atlas-deploy
+        run: |
+          set -euo pipefail
+          mkdir -p "$ATLAS_DEPLOY_HOME/development"
+          printf 'APP_PORT=8000\nDB_PASSWORD=%s\n' "$(openssl rand -hex 32)" > "$ATLAS_DEPLOY_HOME/development/host.env"
+          docker network create atlas-monitoring || true
+           ./deploy/release.sh development "$IMAGE"
+          echo "Verified development image digest: \`$IMAGE\`" >> "$GITHUB_STEP_SUMMARY"
 
   compose-drill:
     if: github.event_name == 'pull_request' || github.event_name == 'push'
@@ -294,6 +302,7 @@ jobs:
           chmod 0444 "$ATLAS_DEPLOY_HOME/alert-token"
           printf 'ALERT_TOKEN_FILE=%s/alert-token\nGRAFANA_ADMIN_PASSWORD=%s\n' "$ATLAS_DEPLOY_HOME" "$(openssl rand -hex 32)" > "$ATLAS_DEPLOY_HOME/monitoring.env"
           docker network create atlas-monitoring
+          printf 'GITHUB_TOKEN=%s\nGITHUB_REPOSITORY=%s\n' "$GITHUB_TOKEN" "$GITHUB_REPOSITORY" >> "$ATLAS_DEPLOY_HOME/monitoring.env"
           docker run -d --name atlas-test-registry -p 127.0.0.1:5000:5000 registry:2
           docker build -t localhost:5000/fieldnote-atlas:ci .
           docker push localhost:5000/fieldnote-atlas:ci
@@ -318,6 +327,19 @@ jobs:
           curl -fsS -H 'Content-Type: application/json' -d '{"id":"ci-isolation","title":"CI note","body":"Synthetic","kind":"Field note","place":"Lab","region":"Lab","date":"2026-01-01","color":"blue","source":"CI"}' http://127.0.0.1:8000/api/observations >/dev/null
           curl -fsS http://127.0.0.1:8001/api/atlas | jq -e 'all(.observations[]; .id != "ci-isolation")'
           password=$(sed -n 's/^GRAFANA_ADMIN_PASSWORD=//p' "$ATLAS_DEPLOY_HOME/monitoring.env")
+          host=127.0.0.1
+          curl -fsS -X POST "http://$host:8000/api/observations/ci-isolation/star" >/dev/null
+          curl -fsS -H 'Content-Type: application/json' -d '{"id":"ci-prod-persist","title":"CI prod note","body":"Synthetic","kind":"Field note"}' "http://$host:8001/api/observations" >/dev/null
+          metrics=$(curl -fsS "http://$host:8000/metrics")
+          echo "$metrics" | grep -E '^(atlas_observations_created_total|atlas_observation_star_changes_total) '
+          echo "$metrics" | grep -qE '^atlas_observations_created_total [1-9]'
+          echo "$metrics" | grep -qE '^atlas_observation_star_changes_total [1-9]'
+          for env in development production; do
+            port=8000; id="ci-isolation"
+            if [ "$env" = "production" ]; then port=8001; id="ci-prod-persist"; fi
+            docker compose -p "atlas-$env" --env-file "$ATLAS_DEPLOY_HOME/$env/host.env" -f deploy/compose.yml restart
+            curl -fsS --retry 15 --retry-delay 2 --retry-all-errors "http://$host:$port/api/atlas" | jq -e --arg id "$id" 'any(.observations[]; .id == $id)'
+          done
           curl -fsS --retry 20 --retry-delay 2 --retry-all-errors -u "admin:$password" http://127.0.0.1:3000/api/dashboards/uid/fieldnote-atlas | jq -e '.dashboard.panels | length == 8'
           python3 deploy/drill.py
           docker compose -p atlas-monitoring --env-file "$ATLAS_DEPLOY_HOME/monitoring.env" -f observability/compose.yml exec -T oncall python - <<'PY'
@@ -329,6 +351,7 @@ jobs:
                     and r["alert"]["labels"]["deployment_environment_name"] == "development"}
           assert {"AtlasHighErrorRate", "AtlasHighLatency", "AtlasUnavailable", "AtlasObservationFailures"} <= firing, firing
           print("Verified persisted Alertmanager webhook delivery for four development alerts")
+          print(json.dumps(reports, indent=2))
           PY
       - name: Print observability service diagnostics
         if: failure()
