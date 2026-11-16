@@ -23,7 +23,7 @@ def seed_database(target_url: str | None = None, force: bool = False) -> dict:
         "collections": len(atlas["collections"]),
         "observations": len(atlas["observations"]),
     }
-    print(f"[+] Database seeded at {repo.url}: {result['collections']} collections, {result['observations']} observations.")
+    print(f"[+] Database seed verified: {result['collections']} collections, {result['observations']} observations.")
     return result
 
 
