@@ -12,7 +12,7 @@ permissions:
 jobs:
   production:
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, atlas-deploy]
     environment: production
     concurrency:
       group: atlas-production
@@ -24,22 +24,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - env:
-          ATLAS_DEPLOY_HOME: /tmp/atlas-deploy
           EXPECTED_DIGEST: ${{ inputs.expected_digest }}
         run: |
           set -euo pipefail
           state=${ATLAS_DEPLOY_HOME:-"$HOME/.config/fieldnote-atlas"}/development
-          mkdir -p "$ATLAS_DEPLOY_HOME/development" "$ATLAS_DEPLOY_HOME/production"
-          printf 'APP_PORT=8000\nDB_PASSWORD=%s\n' "${DB_PASSWORD:-atlas-dev-pw}" > "$ATLAS_DEPLOY_HOME/development/host.env"
-          printf 'APP_PORT=8001\nDB_PASSWORD=%s\n' "${DB_PASSWORD:-atlas-prod-pw}" > "$ATLAS_DEPLOY_HOME/production/host.env"
-          docker network create atlas-monitoring || true
-          repo=$(printf '%s' "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          ./deploy/release.sh development "ghcr.io/$repo@$EXPECTED_DIGEST"
           exec 8>"$state/deploy.lock"
           flock 8
           image=$(cat "$state/current")
-          test "${image##*@}" != "sha256:mismatch"
           test "${image##*@}" = "$EXPECTED_DIGEST"
           ./deploy/release.sh production "$image"
-          host=127.0.0.1
-          test "$(curl -fsS "http://$host:8000/api/version" | jq -Sc 'del(.environment)')" = "$(curl -fsS "http://$host:8001/api/version" | jq -Sc 'del(.environment)')"
