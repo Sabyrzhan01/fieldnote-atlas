@@ -257,7 +257,7 @@ jobs:
 
   development:
     needs: publish
-    runs-on: [self-hosted, atlas-deploy]
+    runs-on: ubuntu-latest
     environment: development
     permissions:
       contents: read
@@ -276,11 +276,13 @@ jobs:
         run: ./deploy/release.sh development "$IMAGE"
 
   compose-drill:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 18
     env:
       ATLAS_DEPLOY_HOME: /tmp/atlas-deploy
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
       - name: Build one test image and start independent environments
