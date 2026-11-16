@@ -48,6 +48,10 @@ services:
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_REPOSITORY: ${GITHUB_REPOSITORY:-}
+      CREATE_GITHUB_ISSUES: ${CREATE_GITHUB_ISSUES:-0}
     volumes:
       - ${ALERT_TOKEN_FILE:?set absolute ALERT_TOKEN_FILE}:/run/secrets/atlas-alert-token:ro
       - incidents:/incidents
