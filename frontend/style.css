@@ -66,3 +66,54 @@ button:focus-visible, select:focus-visible, input:focus-visible {
 .city-view .map-footer { flex-wrap: wrap; min-height: 39px; height: auto; padding-block: 5px; }
 .city-view #placeCityPin { border: 1px solid #d5b7aa; border-radius: 4px; padding: 5px 8px; color: #85462f; }
 .city-view #placeCityPin[aria-pressed="true"] { background: #f4e3d8; }
+
+.undo-notice {
+  position: fixed;
+  z-index: 21;
+  inset: auto 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: min(420px, calc(100% - 24px));
+  margin-inline: auto;
+  padding: 10px 12px;
+  background: #30342d;
+  color: #fff;
+  border-radius: 5px;
+  font-size: 13px;
+}
+.undo-notice button {
+  border: 1px solid #fff;
+  border-radius: 4px;
+  padding: 5px 10px;
+  background: #fff9f0;
+  color: #522c22;
+}
+@media (max-width: 620px) {
+  .search { min-width: 0; }
+  .search input { min-width: 0; }
+  .top-actions .share { white-space: nowrap; }
+  .modal { max-height: calc(100dvh - 40px); overflow: auto; }
+}
+
+.map-legend {
+  padding: 8px 12px;
+  color: #55594e;
+  border-top: 1px solid #e7e5de;
+  font-size: 12px;
+}
+.map-legend summary { cursor: pointer; color: #75412f; }
+.map-legend fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  border: 0;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.map-legend label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+.legend-symbol { color: #2c302b; background: var(--legend-color); border-radius: 50%; padding: 1px 4px; }
+.map-legend p { margin: 8px 0 0; }
+.map-legend summary:focus-visible { outline: 2px solid #a75238; outline-offset: 3px; }
+.sr-only { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }

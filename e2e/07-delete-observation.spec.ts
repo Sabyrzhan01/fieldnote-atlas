@@ -15,8 +15,9 @@ test.describe('Issue #60 — Delete observation', () => {
     const deleteBtn = page.locator('#deleteNote');
     await expect(deleteBtn).toBeVisible();
     await deleteBtn.click();
+    await page.getByRole('button', { name: 'Confirm delete' }).click();
 
-    await expect(page.locator('.toast')).toContainText('Observation deleted');
+    await expect(page.locator('#undoNotice')).toContainText('Observation deleted');
     await expect(page.locator('button.pin')).toHaveCount(5);
     await expect(page.locator('.detail h2')).not.toContainText('A city measured in puddles');
   });
