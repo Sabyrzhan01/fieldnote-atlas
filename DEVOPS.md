@@ -15,7 +15,7 @@ flowchart TD
 
 ## Prepare the deployment host
 
-Use a persistent Linux host with Docker Engine, Compose v2, Python 3, Git, curl, OpenSSL and flock. A machine you already control works. The host and GitHub Actions runner must remain online to deploy automatically. Use a private repository or a dedicated trusted runner limited to the deploy jobs on protected main. Never schedule pull request jobs on the deploy runner. Keep the Docker socket and runner access restricted to deployment operators.
+Use a persistent Linux host with Docker Engine, Compose v2, Python 3, Git, curl, OpenSSL and flock. A machine you already control works. The host and GitHub Actions runner must remain online to deploy automatically. Use a dedicated runner group restricted by policy to the deployment workflows on protected main. If that restriction is unavailable, use a private deployment repository with trusted contributors. Runner labels alone allow any workflow with runner access to target the host. Keep the Docker socket and runner access restricted to deployment operators.
 
 1. Register a self-hosted runner with the additional label `atlas-deploy`. Create GitHub environments named `development` and `production`, limited to the main branch. Add a required production reviewer where supported. Default to GitHub's job token for GHCR and grant this repository access if the package was created separately.
 2. Use the same host user as the runner to make the directory and credentials below. Fill files with independent generated passwords. Store them outside the checkout. Enter actual values in place of the angle-bracket placeholders.
