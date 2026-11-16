@@ -66,9 +66,11 @@ def collect(env):
             "start": str(int(datetime.now(timezone.utc).timestamp() - 600) * 10**9),
             "limit": 12,
         })
+        end = int(datetime.now(timezone.utc).timestamp())
         spans = get(client, "http://tempo:3200/api/search", {
             "q": '{ resource.service.name = "fieldnote-atlas" && resource.deployment.environment.name = "' + env + '" && status = error }',
-            "start": int(datetime.now(timezone.utc).timestamp()) - 600,
+            "start": end - 600,
+            "end": end,
             "limit": 12,
         })
     log_events = logs

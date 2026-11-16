@@ -343,19 +343,10 @@ jobs:
             docker compose -p "atlas-$APP_ENV" --env-file "$state/host.env" -f deploy/compose.yml restart
             curl -fsS --retry 15 --retry-delay 2 --retry-all-errors "http://$host:$port/api/atlas" | jq -e --arg id "$id" 'any(.observations[]; .id == $id)'
           done
-          curl -fsS --retry 20 --retry-delay 2 --retry-all-errors -u "admin:$password" http://127.0.0.1:3000/api/dashboards/uid/fieldnote-atlas | jq -e '.dashboard.panels | length == 8'
+          curl -fsS --retry 20 --retry-delay 2 --retry-all-errors -u "admin:$password" http://127.0.0.1:3000/api/dashboards/uid/fieldnote-atlas > "$ATLAS_DEPLOY_HOME/dashboard.json"
           python3 deploy/drill.py
-          docker compose -p atlas-monitoring --env-file "$ATLAS_DEPLOY_HOME/monitoring.env" -f observability/compose.yml exec -T oncall python - <<'PY'
-          import json, sqlite3
-          with sqlite3.connect("file:/incidents/reports.db?mode=ro", uri=True) as db:
-              reports = [json.loads(row[0]) for row in db.execute("SELECT report FROM incidents")]
-          firing = {r["alert"]["labels"]["alertname"] for r in reports
-                    if r["alert"]["status"] == "firing"
-                    and r["alert"]["labels"]["deployment_environment_name"] == "development"}
-          assert {"AtlasHighErrorRate", "AtlasHighLatency", "AtlasUnavailable", "AtlasObservationFailures"} <= firing, firing
-          print("Verified persisted Alertmanager webhook delivery for four development alerts")
-          print(json.dumps(reports, indent=2))
-          PY
+          docker compose -p atlas-monitoring --env-file "$ATLAS_DEPLOY_HOME/monitoring.env" -f observability/compose.yml exec -T oncall python - "$APP_VERSION" < deploy/check_incidents.py
+          GRAFANA_PASSWORD="$password" python3 deploy/check_dashboard.py "$ATLAS_DEPLOY_HOME/dashboard.json" "$APP_VERSION"
       - name: Print observability service diagnostics
         if: failure()
         run: docker compose -p atlas-monitoring --env-file "$ATLAS_DEPLOY_HOME/monitoring.env" -f observability/compose.yml logs --tail=100
