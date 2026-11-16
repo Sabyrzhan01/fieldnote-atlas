@@ -168,9 +168,22 @@ Each E2E feature has its own dedicated spec file and GitHub Issue:
 - **Stage 6 (`deploy`)**: [#66](https://github.com/Sabyrzhan01/fieldnote-atlas/issues/66)
 - **Stage 7 (`infrastructure`)**: [#67](https://github.com/Sabyrzhan01/fieldnote-atlas/issues/67)
 
-## DevOps and observability assignment
+### Export and recover observations
 
-The managed deployment uses separate development and production Compose projects with independent PostgreSQL volumes. Development is deployed automatically from main. Production promotion is manual and reuses the exact image digest validated in development.
+Use **Export** in the observation panel to download `fieldnote-atlas.json` in UTF‑8.
+The array contains the active collection's matching observations, including their IDs,
+collection IDs, titles, text, categories, dates, sources, tags and map positions.
+Search and category filters determine which observations appear in the export.
+
+The observation options menu asks for confirmation before deleting a note.
+**Undo** restores the most recently deleted observation for 30 seconds in the same browser,
+including after a reload within that window.
+
+---
+
+## 7. DevOps and Observability Assignment
+
+The managed deployment uses separate development and production Compose projects with independent PostgreSQL volumes. Development is deployed automatically from `main`. Production promotion is manual and reuses the exact image digest validated in development.
 
 - [Release setup, CI/CD and rollback](DEVOPS.md)
 - [OpenTelemetry, Grafana, alerts and failure drill](OBSERVABILITY.md)
