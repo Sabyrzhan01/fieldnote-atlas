@@ -36,6 +36,8 @@ class ObservationRow(Base):
     starred: Mapped[bool] = mapped_column(Boolean, default=False)
     x: Mapped[float] = mapped_column(Float, default=50.0)
     y: Mapped[float] = mapped_column(Float, default=50.0)
+    latitude: Mapped[float | None] = mapped_column(Float)
+    longitude: Mapped[float | None] = mapped_column(Float)
 
 
 def normalize_db_url(url: str) -> str:
@@ -163,7 +165,9 @@ class SQLAlchemyRepository:
                     "source": o.source,
                     "starred": bool(o.starred),
                     "x": float(o.x),
-                    "y": float(o.y)
+                    "y": float(o.y),
+                    "latitude": o.latitude,
+                    "longitude": o.longitude
                 })
             return {"collections": collections, "observations": observations}
 
@@ -194,7 +198,7 @@ class SQLAlchemyRepository:
             o = s.get(self.O, item_id)
             if o is None:
                 return None
-            for field in ('collection_id', 'title', 'body', 'kind', 'place', 'region', 'date', 'color', 'tags', 'source', 'starred', 'x', 'y'):
+            for field in ('collection_id', 'title', 'body', 'kind', 'place', 'region', 'date', 'color', 'tags', 'source', 'starred', 'x', 'y', 'latitude', 'longitude'):
                 if field in patch and patch[field] is not None:
                     setattr(o, field, patch[field])
             s.commit()

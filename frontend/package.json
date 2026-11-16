@@ -9,6 +9,9 @@
     "preview": "vite preview",
     "test": "vitest run"
   },
+  "dependencies": {
+    "leaflet": "1.9.4"
+  },
   "devDependencies": {
     "vite": "^5.4.10",
     "vitest": "^2.1.4"
