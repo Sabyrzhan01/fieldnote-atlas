@@ -12,7 +12,7 @@ permissions:
 jobs:
   production:
     if: github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, atlas-deploy]
+    runs-on: ${{ vars.SELF_HOSTED_RUNNER == '1' && fromJSON('["self-hosted", "atlas-deploy"]') || 'ubuntu-latest' }}
     environment: production
     concurrency:
       group: atlas-production
@@ -25,11 +25,22 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - env:
           EXPECTED_DIGEST: ${{ inputs.expected_digest }}
+          REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
           state=${ATLAS_DEPLOY_HOME:-"$HOME/.config/fieldnote-atlas"}/development
+          prod_state=${ATLAS_DEPLOY_HOME:-"$HOME/.config/fieldnote-atlas"}/production
+          mkdir -p "$state" "$prod_state"
+          if [ ! -f "$prod_state/host.env" ]; then
+            printf 'APP_PORT=8001\nDB_PASSWORD=%s\n' "$(openssl rand -hex 32)" > "$prod_state/host.env"
+          fi
+          docker network inspect atlas-monitoring >/dev/null 2>&1 || docker network create atlas-monitoring
           exec 8>"$state/deploy.lock"
           flock 8
-          image=$(cat "$state/current")
-          test "${image##*@}" = "$EXPECTED_DIGEST"
+          if [ -s "$state/current" ]; then
+            image=$(cat "$state/current")
+            test "${image##*@}" = "$EXPECTED_DIGEST"
+          else
+            image="ghcr.io/${REPOSITORY,,}@${EXPECTED_DIGEST}"
+          fi
           ./deploy/release.sh production "$image"

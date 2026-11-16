@@ -258,7 +258,7 @@ jobs:
 
   development:
     needs: publish
-    runs-on: [self-hosted, atlas-deploy]
+    runs-on: ${{ vars.SELF_HOSTED_RUNNER == '1' && fromJSON('["self-hosted", "atlas-deploy"]') || 'ubuntu-latest' }}
     environment: development
     permissions:
       contents: read
@@ -274,8 +274,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - env:
           IMAGE: ${{ needs.publish.outputs.image }}
+          ATLAS_DEPLOY_HOME: /tmp/atlas-deploy
         run: |
           set -euo pipefail
+          state=${ATLAS_DEPLOY_HOME:-"$HOME/.config/fieldnote-atlas"}/development
+          mkdir -p "$state"
+          if [ ! -f "$state/host.env" ]; then
+            printf 'APP_PORT=8000\nDB_PASSWORD=%s\n' "$(openssl rand -hex 32)" > "$state/host.env"
+          fi
+          docker network inspect atlas-monitoring >/dev/null 2>&1 || docker network create atlas-monitoring
           ./deploy/release.sh development "$IMAGE"
           echo "Verified development image digest: \`$IMAGE\`" >> "$GITHUB_STEP_SUMMARY"
 
