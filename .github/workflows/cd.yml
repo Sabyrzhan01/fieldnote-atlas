@@ -15,7 +15,6 @@ jobs:
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_repository.full_name == github.repository
-    needs: [integration, e2e, docker-build, compose-drill]
     runs-on: ubuntu-latest
     permissions:
       contents: read
