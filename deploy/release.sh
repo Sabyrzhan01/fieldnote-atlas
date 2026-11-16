@@ -3,7 +3,7 @@ set -euo pipefail
 environment=${1:?environment required}
 image=${2:?digest required}
 [[ "$environment" == development || "$environment" == production ]]
-[[ "$image" =~ ^ghcr\.io/[a-z0-9._/-]+@sha256:[a-f0-9]{64}$ ]]
+[[ "$image" =~ ^([a-z0-9.:_-]+/)?[a-z0-9._/-]+@sha256:[a-f0-9]{64}$ ]]
 state=${ATLAS_DEPLOY_HOME:-"$HOME/.config/fieldnote-atlas"}/$environment
 umask 077
 exec 9>"$state/deploy.lock"

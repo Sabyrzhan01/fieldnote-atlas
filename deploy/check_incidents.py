@@ -57,6 +57,11 @@ if __name__ == "__main__":
         time.sleep(3)
     for name, status in sorted(expected):
         print(f"Verified persisted development webhook: {name} {status}")
+    analyzed = [r for r in reports if r["alert"]["status"] == "firing" and r.get("analysis", {}).get("status") == "analyzed"]
+    assert analyzed, f"Expected at least one firing incident with analysis.status == 'analyzed', got: {[r.get('analysis') for r in reports if r['alert']['status'] == 'firing']}"
+    sample_analysis = analyzed[0]["analysis"]
+    assert sample_analysis.get("most_likely_root_cause") and sample_analysis.get("troubleshooting_steps"), "Missing structured AI analysis fields"
+    print(f"Verified AI responder analyzed {len(analyzed)} firing incidents (cause: {sample_analysis['most_likely_root_cause'][:80]}...)")
     with httpx.Client(timeout=5) as client:
         trace_id = find_failed_request(client, reports, sys.argv[1])
     print(f"Correlated a Loki failure log with Tempo trace {trace_id} and verified service, environment and digest")

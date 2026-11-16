@@ -294,7 +294,7 @@ jobs:
           mkdir -p "$ATLAS_DEPLOY_HOME"/{development,production}
           openssl rand -hex 32 > "$ATLAS_DEPLOY_HOME/alert-token"
           chmod 0444 "$ATLAS_DEPLOY_HOME/alert-token"
-          printf 'ALERT_TOKEN_FILE=%s/alert-token\nGRAFANA_ADMIN_PASSWORD=%s\n' "$ATLAS_DEPLOY_HOME" "$(openssl rand -hex 32)" > "$ATLAS_DEPLOY_HOME/monitoring.env"
+          printf 'ALERT_TOKEN_FILE=%s/alert-token\nGRAFANA_ADMIN_PASSWORD=%s\nGITHUB_TOKEN=%s\nGITHUB_REPOSITORY=%s\n' "$ATLAS_DEPLOY_HOME" "$(openssl rand -hex 32)" "${{ secrets.GITHUB_TOKEN }}" "${{ github.repository }}" > "$ATLAS_DEPLOY_HOME/monitoring.env"
           docker network create atlas-monitoring
           docker run -d --name atlas-test-registry -p 127.0.0.1:5000:5000 registry:2
           docker build -t localhost:5000/fieldnote-atlas:ci .
@@ -309,9 +309,24 @@ jobs:
             if [[ "$APP_ENV" == production ]]; then port=8001; fi
             state="$ATLAS_DEPLOY_HOME/$APP_ENV"
             printf 'APP_PORT=%s\nDB_PASSWORD=%s\n' "$port" "$(openssl rand -hex 32)" > "$state/host.env"
-            printf '%s\n' "$APP_IMAGE" > "$state/current"
-            docker compose -p "atlas-$APP_ENV" --env-file "$state/host.env" -f deploy/compose.yml up -d --wait --wait-timeout 150
           done
+          ./deploy/release.sh development "$APP_IMAGE"
+          if (EXPECTED_DIGEST="sha256:0000000000000000000000000000000000000000000000000000000000000000" && image=$(cat "$ATLAS_DEPLOY_HOME/development/current") && test "${image##*@}" = "$EXPECTED_DIGEST"); then
+            echo "Wrong digest was not rejected!" >&2
+            exit 1
+          fi
+          echo "Verified wrong digest rejection before production promotion"
+          EXPECTED_DIGEST="$APP_VERSION"
+          image=$(cat "$ATLAS_DEPLOY_HOME/development/current")
+          test "${image##*@}" = "$EXPECTED_DIGEST"
+          ./deploy/release.sh production "$image"
+          if ./deploy/release.sh production "localhost:5000/fieldnote-atlas@sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"; then
+            echo "Non-existent digest deployment should have failed!" >&2
+            exit 1
+          fi
+          test "$(cat "$ATLAS_DEPLOY_HOME/production/current")" = "$APP_IMAGE"
+          curl -fsS http://127.0.0.1:8001/api/version | jq -e --arg v "$APP_VERSION" '.environment == "production" and .version == $v'
+          echo "Verified failed deployment rollback restored last good production image ($APP_VERSION)"
       - name: Check application isolation, dashboard and alert recovery
         run: |
           set -euo pipefail

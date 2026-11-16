@@ -135,7 +135,7 @@ def analyze(report):
         model = os.getenv("OPENAI_MODEL") or "gpt-4.1-mini"
     else:
         base_url = (os.getenv("OPENAI_BASE_URL") or "https://models.inference.ai.azure.com").rstrip("/")
-        model = os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
+        model = os.getenv("OPENAI_MODEL") if os.getenv("OPENAI_BASE_URL") else "gpt-4o-mini"
     try:
         response = httpx.post(
             f"{base_url}/chat/completions",
