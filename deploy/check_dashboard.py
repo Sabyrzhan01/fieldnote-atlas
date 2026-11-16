@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import time
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -22,6 +23,10 @@ if __name__ == "__main__":
     assert len(dashboard["panels"]) == 8
     selectors = {variable["name"] for variable in dashboard["templating"]["list"]}
     assert {"environment", "version"} <= selectors
+    for _ in range(3):
+        with urlopen("http://127.0.0.1:8000/api/atlas", timeout=5) as response:
+            assert response.status == 200
+        time.sleep(10)
     checked = 0
     for panel in dashboard["panels"]:
         for target in panel["targets"]:
