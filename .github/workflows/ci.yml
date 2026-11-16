@@ -329,7 +329,7 @@ jobs:
           password=$(sed -n 's/^GRAFANA_ADMIN_PASSWORD=//p' "$ATLAS_DEPLOY_HOME/monitoring.env")
           host=127.0.0.1
           curl -fsS -X POST "http://$host:8000/api/observations/ci-isolation/star" >/dev/null
-          curl -fsS -H 'Content-Type: application/json' -d '{"id":"ci-prod-persist","title":"CI prod note","body":"Synthetic","kind":"Field note"}' "http://$host:8001/api/observations" >/dev/null
+          curl -fsS -H 'Content-Type: application/json' -d '{"id":"ci-prod-persist","title":"CI prod note","body":"Synthetic","kind":"Field note","place":"Lab","region":"Lab","date":"2026-01-01","color":"blue","source":"CI"}' "http://$host:8001/api/observations" >/dev/null
           metrics=$(curl -fsS "http://$host:8000/metrics")
           echo "$metrics" | grep -E '^(atlas_observations_created_total|atlas_observation_star_changes_total) '
           echo "$metrics" | grep -qE '^atlas_observations_created_total [1-9]'
