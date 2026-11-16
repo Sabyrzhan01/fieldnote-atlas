@@ -233,7 +233,7 @@ jobs:
 
   publish:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [integration, e2e, docker-build]
+    needs: [integration, e2e, docker-build, compose-drill]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -258,7 +258,7 @@ jobs:
 
   development:
     needs: publish
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, atlas-deploy]
     environment: development
     permissions:
       contents: read
@@ -274,13 +274,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - env:
           IMAGE: ${{ needs.publish.outputs.image }}
-          ATLAS_DEPLOY_HOME: /tmp/atlas-deploy
         run: |
           set -euo pipefail
-          mkdir -p "$ATLAS_DEPLOY_HOME/development"
-          printf 'APP_PORT=8000\nDB_PASSWORD=%s\n' "$(openssl rand -hex 32)" > "$ATLAS_DEPLOY_HOME/development/host.env"
-          docker network create atlas-monitoring || true
-           ./deploy/release.sh development "$IMAGE"
+          ./deploy/release.sh development "$IMAGE"
           echo "Verified development image digest: \`$IMAGE\`" >> "$GITHUB_STEP_SUMMARY"
 
   compose-drill:
