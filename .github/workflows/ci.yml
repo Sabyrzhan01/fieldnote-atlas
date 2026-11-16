@@ -280,7 +280,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 18
     env:
-      ATLAS_DEPLOY_HOME: ${{ runner.temp }}/atlas-deploy
+      ATLAS_DEPLOY_HOME: /tmp/atlas-deploy
     steps:
       - uses: actions/checkout@v4
       - name: Build one test image and start independent environments
