@@ -332,6 +332,9 @@ jobs:
           set -euo pipefail
           curl -fsS http://127.0.0.1:8000/api/version | jq -e '.environment == "development"'
           curl -fsS http://127.0.0.1:8001/api/version | jq -e '.environment == "production"'
+          APP_IMAGE=$(cat "$ATLAS_DEPLOY_HOME/development/current")
+          APP_VERSION="${APP_IMAGE##*@}"
+          export APP_IMAGE APP_VERSION
           curl -fsS -H 'Content-Type: application/json' -d '{"id":"ci-isolation","title":"CI note","body":"Synthetic","kind":"Field note","place":"Lab","region":"Lab","date":"2026-01-01","color":"blue","source":"CI"}' http://127.0.0.1:8000/api/observations >/dev/null
           curl -fsS http://127.0.0.1:8001/api/atlas | jq -e 'all(.observations[]; .id != "ci-isolation")'
           password=$(sed -n 's/^GRAFANA_ADMIN_PASSWORD=//p' "$ATLAS_DEPLOY_HOME/monitoring.env")
