@@ -96,3 +96,24 @@ button:focus-visible, select:focus-visible, input:focus-visible {
   .top-actions .share { white-space: nowrap; }
   .modal { max-height: calc(100dvh - 40px); overflow: auto; }
 }
+
+.map-legend {
+  padding: 8px 12px;
+  color: #55594e;
+  border-top: 1px solid #e7e5de;
+  font-size: 12px;
+}
+.map-legend summary { cursor: pointer; color: #75412f; }
+.map-legend fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  border: 0;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.map-legend label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+.legend-symbol { color: #2c302b; background: var(--legend-color); border-radius: 50%; padding: 1px 4px; }
+.map-legend p { margin: 8px 0 0; }
+.map-legend summary:focus-visible { outline: 2px solid #a75238; outline-offset: 3px; }
+.sr-only { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }

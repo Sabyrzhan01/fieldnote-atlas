@@ -62,3 +62,24 @@ test('browses, searches, creates and exports a filtered collection at 390px', as
     collection_id: 'c2', title: 'Алматы — Café & «арық»', tags: ['Алматы', 'café'],
   });
 });
+
+test('keyboard toggles map layers without mutating observations', async ({ page, request }) => {
+  await request.post('/api/test/reset');
+  await page.goto('/');
+  await expect(page.locator('button.pin')).toHaveCount(6);
+  const legend = page.locator('#mapLegend summary');
+  await legend.focus();
+  await legend.press('Enter');
+  await expect(page.getByText('Sketch map positions are illustrative.', { exact: false })).toBeVisible();
+  const interviews = page.getByRole('checkbox', { name: /Interview/ });
+  await interviews.focus();
+  await interviews.press('Space');
+  await expect(interviews).not.toBeChecked();
+  await expect(interviews).toBeFocused();
+  await expect(page.locator('button.pin')).toHaveCount(4);
+  await expect(page.locator('.map-count')).toContainText('4 observations mapped');
+  const response = await request.get('/api/atlas');
+  expect((await response.json()).observations.filter(note => note.kind === 'Interview')).toHaveLength(2);
+  await interviews.press('Space');
+  await expect(page.locator('button.pin')).toHaveCount(6);
+});
