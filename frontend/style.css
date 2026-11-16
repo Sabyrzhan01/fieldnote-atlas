@@ -66,3 +66,33 @@ button:focus-visible, select:focus-visible, input:focus-visible {
 .city-view .map-footer { flex-wrap: wrap; min-height: 39px; height: auto; padding-block: 5px; }
 .city-view #placeCityPin { border: 1px solid #d5b7aa; border-radius: 4px; padding: 5px 8px; color: #85462f; }
 .city-view #placeCityPin[aria-pressed="true"] { background: #f4e3d8; }
+
+.undo-notice {
+  position: fixed;
+  z-index: 21;
+  inset: auto 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: min(420px, calc(100% - 24px));
+  margin-inline: auto;
+  padding: 10px 12px;
+  background: #30342d;
+  color: #fff;
+  border-radius: 5px;
+  font-size: 13px;
+}
+.undo-notice button {
+  border: 1px solid #fff;
+  border-radius: 4px;
+  padding: 5px 10px;
+  background: #fff9f0;
+  color: #522c22;
+}
+@media (max-width: 620px) {
+  .search { min-width: 0; }
+  .search input { min-width: 0; }
+  .top-actions .share { white-space: nowrap; }
+  .modal { max-height: calc(100dvh - 40px); overflow: auto; }
+}

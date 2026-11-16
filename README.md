@@ -167,3 +167,14 @@ Each E2E feature has its own dedicated spec file and GitHub Issue:
 - **Stage 5 (`ci-cd`)**: [#65](https://github.com/Sabyrzhan01/fieldnote-atlas/issues/65)
 - **Stage 6 (`deploy`)**: [#66](https://github.com/Sabyrzhan01/fieldnote-atlas/issues/66)
 - **Stage 7 (`infrastructure`)**: [#67](https://github.com/Sabyrzhan01/fieldnote-atlas/issues/67)
+
+### Export and recover observations
+
+Use **Export** in the observation panel to download `fieldnote-atlas.json` in UTF‑8.
+The array contains the active collection's matching observations, including their IDs,
+collection IDs, titles, text, categories, dates, sources, tags and map positions.
+Search and category filters determine which observations appear in the export.
+
+The observation options menu asks for confirmation before deleting a note.
+**Undo** restores the most recently deleted observation for 30 seconds in the same browser,
+including after a reload within that window.
