@@ -1,11 +1,13 @@
 import os
 from pathlib import Path
+from time import sleep
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from .repository import make_repository
 from .schemas import AtlasData, ObservationInput
+from .telemetry import ENVIRONMENT, VERSION, configure, logger
 
 app = FastAPI(title='Fieldnote Atlas API', version='1.0.0')
 app.add_middleware(
@@ -19,6 +21,8 @@ repository = make_repository()
 
 @app.get('/api/health')
 def health():
+    if hasattr(repository, 'check_health'):
+        repository.check_health()
     return {'status': 'ok'}
 
 
@@ -31,6 +35,10 @@ def atlas():
 def create_observation(payload: ObservationInput):
     if payload.collection_id not in {c['id'] for c in repository.list_atlas()['collections']}:
         raise HTTPException(status_code=422, detail='Unknown collection')
+    if ENVIRONMENT == 'development' and Path('/tmp/atlas-fault').is_file():
+        logger.error("Development drill blocked observation creation", extra={"status_class": "5xx"})
+        sleep(1.2)
+        raise HTTPException(status_code=503, detail='Development observation failure drill')
     return repository.create(payload)
 
 
@@ -60,10 +68,15 @@ def delete_observation(observation_id: str):
 
 @app.post('/api/test/reset', response_model=AtlasData)
 def reset_database_for_tests():
-    if os.environ.get('ENABLE_TEST_RESET') != '1':
+    if ENVIRONMENT == 'production' or os.environ.get('ENABLE_TEST_RESET') != '1':
         raise HTTPException(status_code=403, detail='Test reset endpoint is disabled')
     return repository.reset()
 
+
+
+@app.get('/api/version')
+def version():
+    return {'environment': ENVIRONMENT, 'version': VERSION}
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DIST_DIR = PROJECT_ROOT / 'frontend' / 'dist'
@@ -82,3 +95,6 @@ def serve_spa(full_path: str):
     if full_path and candidate.is_file() and str(candidate).startswith(str(WEB_ROOT.resolve())):
         return FileResponse(candidate)
     return FileResponse(WEB_ROOT / 'index.html')
+
+
+configure(app, getattr(repository, 'engine', None))

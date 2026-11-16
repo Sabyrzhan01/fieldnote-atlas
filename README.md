@@ -167,3 +167,12 @@ Each E2E feature has its own dedicated spec file and GitHub Issue:
 - **Stage 5 (`ci-cd`)**: [#65](https://github.com/Sabyrzhan01/fieldnote-atlas/issues/65)
 - **Stage 6 (`deploy`)**: [#66](https://github.com/Sabyrzhan01/fieldnote-atlas/issues/66)
 - **Stage 7 (`infrastructure`)**: [#67](https://github.com/Sabyrzhan01/fieldnote-atlas/issues/67)
+
+## DevOps and observability assignment
+
+The managed deployment uses separate development and production Compose projects with independent PostgreSQL volumes. Development is deployed automatically from main. Production promotion is manual and reuses the exact image digest validated in development.
+
+- [Release setup, CI/CD and rollback](DEVOPS.md)
+- [OpenTelemetry, Grafana, alerts and failure drill](OBSERVABILITY.md)
+- [AI on-call setup and incident reports](AI_ONCALL.md)
+- [Assignment verification report](ASSIGNMENT_REPORT.md)

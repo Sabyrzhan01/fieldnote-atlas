@@ -100,7 +100,7 @@ class SQLAlchemyRepository:
     def __init__(self, url: str, seed_if_empty: bool = True):
         url = normalize_db_url(url)
         connect_args = {"check_same_thread": False} if url.startswith('sqlite') else {}
-        engine_kwargs = {"connect_args": connect_args}
+        engine_kwargs = {"connect_args": connect_args, "hide_parameters": True}
         if not url.startswith('sqlite'):
             engine_kwargs["pool_pre_ping"] = True
 
@@ -113,6 +113,10 @@ class SQLAlchemyRepository:
 
         if seed_if_empty:
             self.seed_defaults()
+
+    def check_health(self):
+        with self.engine.connect() as connection:
+            connection.exec_driver_sql("SELECT 1")
 
     def seed_defaults(self):
         with self.Session() as s:

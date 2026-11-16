@@ -1,0 +1,25 @@
+groups:
+  - name: atlas
+    rules:
+      - alert: AtlasHighErrorRate
+        expr: |
+          sum by (deployment_environment_name, service_version) (rate(atlas_http_requests_total{status_class="5xx"}[2m]))
+          / sum by (deployment_environment_name, service_version) (rate(atlas_http_requests_total[2m])) > 0.10
+        for: 30s
+        labels: {severity: warning, service_name: fieldnote-atlas, owner: atlas}
+        annotations: {summary: "More than 10% of requests return 5xx", dashboard: "/d/fieldnote-atlas"}
+      - alert: AtlasHighLatency
+        expr: histogram_quantile(0.95, sum by (deployment_environment_name, service_version, le) (rate(atlas_http_duration_seconds_bucket[2m]))) > 0.75
+        for: 30s
+        labels: {severity: warning, service_name: fieldnote-atlas, owner: atlas}
+        annotations: {summary: "95th percentile response time exceeds 750 ms", dashboard: "/d/fieldnote-atlas"}
+      - alert: AtlasUnavailable
+        expr: (probe_success{job="atlas-health"} == 0) or (up{job="atlas-health"} == 0)
+        for: 30s
+        labels: {severity: critical, service_name: fieldnote-atlas, owner: atlas}
+        annotations: {summary: "The API or database health check is unavailable", dashboard: "/d/fieldnote-atlas"}
+      - alert: AtlasObservationFailures
+        expr: sum by (deployment_environment_name, service_version) (increase(atlas_observation_failures_total[2m])) >= 3
+        for: 30s
+        labels: {severity: warning, service_name: fieldnote-atlas, owner: atlas}
+        annotations: {summary: "At least three observation writes failed within two minutes", dashboard: "/d/fieldnote-atlas"}

@@ -23,6 +23,7 @@ GITHUB_API = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}"
 ROOT_DIR = Path(__file__).resolve().parents[1]
 
 LABELS = [
+    {"name": "observability", "color": "5319e7", "description": "Telemetry, alerts, and incident response"},
     {
         "name": "e2e-test",
         "color": "0052cc",
@@ -115,10 +116,13 @@ def main():
         print("    Example: export GITHUB_TOKEN=ghp_... && python scripts/sync_github_issues.py\n")
         dry_run = True
 
-    issue_files = sorted(
-        list(ROOT_DIR.glob("issues/e2e-tests/*.md")) +
-        list(ROOT_DIR.glob("issues/devops/*.md"))
-    )
+    if "--observability" in sys.argv:
+        issue_files = sorted(ROOT_DIR.glob("issues/observability/*.md"))
+    else:
+        issue_files = sorted(
+            list(ROOT_DIR.glob("issues/e2e-tests/*.md")) +
+            list(ROOT_DIR.glob("issues/devops/*.md"))
+        )
 
     print(f"[*] Found {len(issue_files)} local issue markdown specifications.")
 
@@ -126,11 +130,16 @@ def main():
     if not dry_run:
         print("[*] Fetching existing issues from GitHub...")
         try:
-            issues = make_request(f"{GITHUB_API}/issues?state=all&per_page=100", token=token)
-            existing_titles = {i["title"].strip() for i in issues}
+            page = 1
+            while True:
+                issues = make_request(f"{GITHUB_API}/issues?state=all&per_page=100&page={page}", token=token)
+                existing_titles.update(i["title"].strip() for i in issues if "pull_request" not in i)
+                if len(issues) < 100:
+                    break
+                page += 1
             print(f"[*] Found {len(existing_titles)} existing GitHub issues in repository.")
         except Exception as e:
-            print(f"[!] Warning: Could not fetch issues: {e}")
+            raise SystemExit(f"Could not fetch issues: {e}") from e
 
         # Ensure labels exist
         print("[*] Ensuring required GitHub labels exist...")

@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fieldnote
+      POSTGRES_DB: fieldnote_atlas
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD, pg_isready, -U, fieldnote, -d, fieldnote_atlas]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  app:
+    image: ${APP_IMAGE:?set APP_IMAGE}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${APP_PORT:?set APP_PORT}:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://fieldnote:${DB_PASSWORD}@db:5432/fieldnote_atlas
+      APP_ENV: ${APP_ENV:?set APP_ENV}
+      APP_VERSION: ${APP_VERSION:?set APP_VERSION}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://collector:4318
+      ENABLE_TEST_RESET: "0"
+    networks:
+      default: {}
+      monitoring:
+        aliases: ["atlas-${APP_ENV}"]
+volumes:
+  pgdata:
+networks:
+  monitoring:
+    external: true
+    name: atlas-monitoring

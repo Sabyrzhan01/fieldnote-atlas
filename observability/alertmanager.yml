@@ -1,0 +1,15 @@
+route:
+  receiver: atlas-oncall
+  group_by: [alertname, deployment_environment_name, service_name]
+  group_wait: 5s
+  group_interval: 30s
+  repeat_interval: 4h
+receivers:
+  - name: atlas-oncall
+    webhook_configs:
+      - url: http://oncall:8080/alerts
+        timeout: 120s
+        send_resolved: true
+        http_config:
+          authorization:
+            credentials_file: /run/secrets/atlas-alert-token

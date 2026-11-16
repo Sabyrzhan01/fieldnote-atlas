@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+rule_files: [alerts.yml]
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+scrape_configs:
+  - job_name: atlas-collector
+    static_configs:
+      - targets: ["collector:8889"]
+  - job_name: atlas-health
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets: ["http://atlas-development:8000/api/health"]
+        labels:
+          deployment_environment_name: development
+      - targets: ["http://atlas-production:8000/api/health"]
+        labels:
+          deployment_environment_name: production
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - target_label: __address__
+        replacement: blackbox:9115

@@ -1,0 +1,35 @@
+name: Promote tested release
+on:
+  workflow_dispatch:
+    inputs:
+      expected_digest:
+        description: Current verified development digest, including sha256 prefix
+        required: true
+        type: string
+permissions:
+  contents: read
+  packages: read
+jobs:
+  production:
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, atlas-deploy]
+    environment: production
+    concurrency:
+      group: atlas-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - env:
+          EXPECTED_DIGEST: ${{ inputs.expected_digest }}
+        run: |
+          set -euo pipefail
+          state=${ATLAS_DEPLOY_HOME:-"$HOME/.config/fieldnote-atlas"}/development
+          exec 8>"$state/deploy.lock"
+          flock 8
+          image=$(cat "$state/current")
+          test "${image##*@}" = "$EXPECTED_DIGEST"
+          ./deploy/release.sh production "$image"
